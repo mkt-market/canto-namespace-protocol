@@ -1,12 +1,12 @@
 {
-  "name": "mkt-solidity-template",
+  "name": "canto-namespaces-protocol",
   "author": "mkt.market",
   "version": "1.0.0",
-  "description": "MKT Solidity Template",
-  "homepage": "https://github.com/mkt-market/mkt-solidity-template#readme",
+  "description": "Canto Namespaces Protocol",
+  "homepage": "https://github.com/mkt-market/canto-namespaces-protocol#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mkt-market/mkt-solidity-template.git"
+    "url": "git+https://github.com/mkt-market/canto-namespaces-protocol.git"
   },
   "scripts": {
     "prettier": "prettier --write 'src/**/*.sol'",
