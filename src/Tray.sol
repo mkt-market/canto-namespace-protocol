@@ -46,6 +46,9 @@ contract Tray is ERC721 {
         uint16 characterIndex;
     }
 
+    /// @notice Stores the content of a tray, i.e. all tiles
+    mapping(uint256 => TileData[TILES_PER_TRAY]) tiles;
+
     /// @notice Last hash that was used to generate a tray
     bytes32 public lastHash;
 
@@ -65,9 +68,12 @@ contract Tray is ERC721 {
     ) ERC721("Namespaces Tray", "NSTRAY") {
         lastHash = _initHash;
         trayPrice = _trayPrice;
-        _revenueAddress = revenueAddress;
+        revenueAddress = _revenueAddress;
         note = ERC20(_note);
     }
+
+    /// TODO
+    function tokenURI(uint256 id) public view override returns (string memory) {}
 
     /// @notice Buy a specifiable amount of trays
     /// @param _amount Amount of trays to buy
@@ -75,32 +81,35 @@ contract Tray is ERC721 {
         SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
         for (uint256 i; i < _amount; ++i) {
             uint256 trayId = ++nextTrayIDToMint;
+            TileData[TILES_PER_TRAY] memory trayTiledata;
             for (uint256 j; j < TILES_PER_TRAY; ++j) {
                 lastHash = keccak256(abi.encode(lastHash));
+                trayTiledata[j] = _drawing(uint256(lastHash));
             }
+            tiles[trayId] = trayTiledata;
             _mint(msg.sender, trayId); // We do not use _safeMint on purpose here to disallow callbacks and save gas
         }
     }
 
-    function _drawing(uint256 _seed) private returns (uint8 class, uint16 characterIndex) {
+    function _drawing(uint256 _seed) private pure returns (TileData memory tileData) {
         uint256 res = _seed % SUM_ODDS;
         if (res < 32) {
             // Class is 0 in that case
-            characterIndex = uint16(_seed % NUM_CHARS_EMOJIS); // TODO: This might be biased
+            tileData.characterIndex = uint16(_seed % NUM_CHARS_EMOJIS); // TODO: This might be biased
         } else {
-            characterIndex = uint16(_seed % NUM_CHARS_LETTERS); // TODO: This might be biased
+            tileData.characterIndex = uint16(_seed % NUM_CHARS_LETTERS); // TODO: This might be biased
             if (res < 64) {
-                class = 1;
+                tileData.fontClass = 1;
             } else if (res < 80) {
-                class = 2;
+                tileData.fontClass = 2;
             } else if (res < 96) {
-                class = 3 + uint8((res - 80) / 8);
+                tileData.fontClass = 3 + uint8((res - 80) / 8);
             } else if (res < 104) {
-                class = 5 + uint8((res - 96) / 4);
+                tileData.fontClass = 5 + uint8((res - 96) / 4);
             } else if (res < 108) {
-                class = 7 + uint8((res - 104) / 2);
+                tileData.fontClass = 7 + uint8((res - 104) / 2);
             } else {
-                class = 9;
+                tileData.fontClass = 9;
             }
         }
     }
