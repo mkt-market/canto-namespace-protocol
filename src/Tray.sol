@@ -47,7 +47,7 @@ contract Tray is ERC721 {
     }
 
     /// @notice Stores the content of a tray, i.e. all tiles
-    mapping(uint256 => TileData[TILES_PER_TRAY]) tiles;
+    mapping(uint256 => TileData[TILES_PER_TRAY]) private tiles;
 
     /// @notice Last hash that was used to generate a tray
     bytes32 public lastHash;
@@ -89,6 +89,20 @@ contract Tray is ERC721 {
             tiles[trayId] = trayTiledata;
             _mint(msg.sender, trayId); // We do not use _safeMint on purpose here to disallow callbacks and save gas
         }
+    }
+
+    /// @notice Get the information about one tile
+    /// @param _trayId Tray to query
+    /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
+    function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
+        // TODO: Does this revert for non-existing tray ID?
+        tileData = tiles[_trayId][_tileOffset];
+    }
+
+    /// @notice Query all tiles of a tray
+    /// @param _trayId Tray to query
+    function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
+        tileData = tiles[_trayId];
     }
 
     function _drawing(uint256 _seed) private pure returns (TileData memory tileData) {
