@@ -32,7 +32,7 @@ contract Namespace is ERC721 {
     mapping(string => uint256) public nameToToken;
 
     /// @notice Maps NFT IDs to (ASCII) names
-    mapping(uint256 => string) public tokenToNames;
+    mapping(uint256 => string) public tokenToName;
 
     /// @notice Stores the character data of an NFT
     mapping(uint256 => Tray.TileData[]) private nftCharacters;
@@ -42,7 +42,7 @@ contract Namespace is ERC721 {
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToFuse();
     error CallerNotAllowedToBurn();
-    error TooManyCharactersProvided(uint256 numCharacters);
+    error InvalidNumberOfCharacters(uint256 numCharacters);
     error FusingDuplicateCharactersNotAllowed();
     error NameAlreadyRegistered(uint256 nftID);
 
@@ -59,7 +59,7 @@ contract Namespace is ERC721 {
     /// @param _characterList The tiles to use for the fusing
     function fuse(CharacterData[] calldata _characterList) external {
         uint256 numCharacters = _characterList.length;
-        if (numCharacters > 13) revert TooManyCharactersProvided(numCharacters);
+        if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
         uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
         bytes memory bName = new bytes(numCharacters * 4); // Used to convert into a string. Can be four times longer than the string at most (only 4-bytes emojis)
@@ -117,8 +117,8 @@ contract Namespace is ERC721 {
         uint256 currentRegisteredID = nameToToken[nameToRegister];
         if (currentRegisteredID != 0) revert NameAlreadyRegistered(currentRegisteredID);
         nameToToken[nameToRegister] = namespaceIDToMint;
-        tokenToNames[namespaceIDToMint] = nameToRegister;
-        
+        tokenToName[namespaceIDToMint] = nameToRegister;
+
         for (uint256 i; i < numUniqueTrays; ++i) {
             tray.burn(uniqueTrays[i]);
         }
@@ -131,7 +131,9 @@ contract Namespace is ERC721 {
         address owner = ownerOf[_id];
         if (owner != msg.sender && getApproved[_id] != msg.sender && !isApprovedForAll[owner][msg.sender])
             revert CallerNotAllowedToBurn();
-        // TODO: Unset nameToToken based on associated string
+        string memory associatedName = tokenToName[_id];
+        delete tokenToName[_id];
+        delete nameToToken[associatedName];
         _burn(_id);
     }
 }
