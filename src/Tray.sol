@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import "./StringImageUtils.sol";
 
 contract Tray is ERC721 {
     /*//////////////////////////////////////////////////////////////
@@ -48,6 +49,8 @@ contract Tray is ERC721 {
         uint8 fontClass;
         /// @notice For Emojis (font class 0) between 0..NUM_CHARS_EMOJIS - 1, otherwise between 0..NUM_CHARS_LETTERS - 1
         uint16 characterIndex;
+        /// @notice For generative fonts with randomness (Zalgo), we generate and fix this on minting
+        uint8 seed;
     }
 
     /// @notice Stores the content of a tray, i.e. all tiles
@@ -63,6 +66,7 @@ contract Tray is ERC721 {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToBurn();
+    error TokenNotMinted(uint256 tokenID);
 
     /// @notice Sets the initial hash, tray price, and the revenue address
     /// @param _initHash Hash to initialize the system with. Will determine the generation sequence of the trays
@@ -84,8 +88,18 @@ contract Tray is ERC721 {
         namespaceNFT = _namespaceNFT;
     }
 
-    /// TODO
-    function tokenURI(uint256 _id) public view override returns (string memory) {}
+    /// @notice Get the token URI for the specified _id
+    /// @param _id ID to query for
+    function tokenURI(uint256 _id) public view override returns (string memory) {
+        if (ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
+        // Need to do an explicit copy here, implicit one not supported
+        TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
+        TileData[] memory nftTiles = new TileData[](TILES_PER_TRAY);
+        for (uint256 i; i < TILES_PER_TRAY; ++i) {
+            nftTiles[i] = storedNftTiles[i];
+        }
+        return StringImageUtils.generateSVG(nftTiles, true);
+    }
 
     /// @notice Buy a specifiable amount of trays
     /// @param _amount Amount of trays to buy
@@ -148,6 +162,10 @@ contract Tray is ERC721 {
                 tileData.fontClass = 5 + uint8((res - 96) / 4);
             } else if (res < 108) {
                 tileData.fontClass = 7 + uint8((res - 104) / 2);
+                if (tileData.fontClass == 7) {
+                    // Set seed for Zalgo to ensure same characters will be always generated for this tile
+                    tileData.seed = uint8(_seed % 256); // We use the same seed here on purpose as it's just important that this seed stays fixed at some number
+                }
             } else {
                 tileData.fontClass = 9;
             }
