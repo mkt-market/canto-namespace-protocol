@@ -28,8 +28,14 @@ contract Namespace is ERC721 {
     /// @notice Next Namespace ID to mint. We start with minting at ID 1
     uint256 public nextNamespaceIDToMint;
 
-    /// @notice Maps names to NFT IDS
+    /// @notice Maps names to NFT IDs
     mapping(string => uint256) public nameToToken;
+
+    /// @notice Maps NFT IDs to (ASCII) names
+    mapping(uint256 => string) public tokenToNames;
+
+    /// @notice Stores the character data of an NFT
+    mapping(uint256 => Tray.TileData[]) private nftCharacters;
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
@@ -54,6 +60,8 @@ contract Namespace is ERC721 {
     function fuse(CharacterData[] calldata _characterList) external {
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13) revert TooManyCharactersProvided(numCharacters);
+        uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
+        Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
         bytes memory bName = new bytes(numCharacters * 4); // Used to convert into a string. Can be four times longer than the string at most (only 4-bytes emojis)
         uint256 numBytes;
         // Extract unique trays for burning them later on
@@ -71,6 +79,7 @@ contract Namespace is ERC721 {
                 }
             }
             Tray.TileData memory tileData = tray.getTile(trayID, tileOffset); // Will revert if tileOffset is too high
+            nftToMintCharacters.push(tileData);
             if (tileData.fontClass == 0) {
                 // Emoji
                 bytes memory emojiAsBytes = StringImageUtils.characterToUnicodeBytes(0, tileData.characterIndex, 0);
@@ -107,10 +116,9 @@ contract Namespace is ERC721 {
         string memory nameToRegister = string(bName);
         uint256 currentRegisteredID = nameToToken[nameToRegister];
         if (currentRegisteredID != 0) revert NameAlreadyRegistered(currentRegisteredID);
-        uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
         nameToToken[nameToRegister] = namespaceIDToMint;
-
-        // TODO: Mint Namespace NFT and add metadata
+        tokenToNames[namespaceIDToMint] = nameToRegister;
+        
         for (uint256 i; i < numUniqueTrays; ++i) {
             tray.burn(uniqueTrays[i]);
         }
