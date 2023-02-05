@@ -83,7 +83,7 @@ contract Namespace is ERC721 {
                 uint16 characterIndex = tileData.characterIndex;
                 uint8 asciiStartingIndex = 48; // Starting index for numbers
                 if (characterIndex > 9) {
-                    asciiStartingIndex = 97; // Starting index for (lowercase) characters
+                    asciiStartingIndex = 87; // Starting index for (lowercase) characters - 10
                 }
                 bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // TODO: Check in Tray that no higher vals possible / this is validated
             }
