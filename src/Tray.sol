@@ -109,10 +109,10 @@ contract Tray is ERC721 {
     function burn(uint256 _id) external {
         address trayOwner = ownerOf[_id];
         if (
+            namespaceNFT != msg.sender &&
             trayOwner != msg.sender &&
             getApproved[_id] != msg.sender &&
-            !isApprovedForAll[trayOwner][msg.sender] &&
-            namespaceNFT != msg.sender
+            !isApprovedForAll[trayOwner][msg.sender]
         ) revert CallerNotAllowedToBurn();
         _burn(_id);
     }
