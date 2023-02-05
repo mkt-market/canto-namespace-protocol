@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import "./Tray.sol";
+import "./StringImageUtils.sol";
 
 contract Namespace is ERC721 {
     /*//////////////////////////////////////////////////////////////
@@ -72,7 +73,7 @@ contract Namespace is ERC721 {
             Tray.TileData memory tileData = tray.getTile(trayID, tileOffset); // Will revert if tileOffset is too high
             if (tileData.fontClass == 0) {
                 // Emoji
-                bytes memory emojiAsBytes = _emojiOffsetToByte(tileData.characterIndex);
+                bytes memory emojiAsBytes = StringImageUtils.characterToUnicodeBytes(0, tileData.characterIndex, 0);
                 uint256 numBytesEmoji = emojiAsBytes.length;
                 for (uint256 j; j < numBytesEmoji; ++j) {
                     bName[numBytes + j] = emojiAsBytes[j];
@@ -124,10 +125,5 @@ contract Namespace is ERC721 {
             revert CallerNotAllowedToBurn();
         // TODO: Unset nameToToken based on associated string
         _burn(_id);
-    }
-
-    function _emojiOffsetToByte(uint16 _emojiOffset) private pure returns (bytes memory) {
-        // TODO: Return correct value for all 420 emojis...
-        return hex"F09F9881";
     }
 }
