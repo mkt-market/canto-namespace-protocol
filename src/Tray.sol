@@ -35,6 +35,9 @@ contract Tray is ERC721 {
     /// @notice Reference to the $NOTE TOKEN
     ERC20 public immutable note;
 
+    /// @notice Reference to the Namespace NFT contract
+    address public immutable namespaceNFT;
+
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -55,25 +58,33 @@ contract Tray is ERC721 {
     /// @notice Next Tray ID to mint. We start with minting at ID 1
     uint256 public nextTrayIDToMint;
 
+    /*//////////////////////////////////////////////////////////////
+                                 ERRORS
+    //////////////////////////////////////////////////////////////*/
+    error CallerNotAllowedToBurn();
+
     /// @notice Sets the initial hash, tray price, and the revenue address
     /// @param _initHash Hash to initialize the system with. Will determine the generation sequence of the trays
     /// @param _trayPrice Price of one tray in $NOTE
     /// @param _revenueAddress Adress to send the revenue to
     /// @param _note Address of the $NOTE token
+    /// @param _namespaceNFT Address of the Namespace NFT
     constructor(
         bytes32 _initHash,
         uint256 _trayPrice,
         address _revenueAddress,
-        address _note
+        address _note,
+        address _namespaceNFT
     ) ERC721("Namespaces Tray", "NSTRAY") {
         lastHash = _initHash;
         trayPrice = _trayPrice;
         revenueAddress = _revenueAddress;
         note = ERC20(_note);
+        namespaceNFT = _namespaceNFT;
     }
 
     /// TODO
-    function tokenURI(uint256 id) public view override returns (string memory) {}
+    function tokenURI(uint256 _id) public view override returns (string memory) {}
 
     /// @notice Buy a specifiable amount of trays
     /// @param _amount Amount of trays to buy
@@ -89,6 +100,20 @@ contract Tray is ERC721 {
             tiles[trayId] = trayTiledata;
             _mint(msg.sender, trayId); // We do not use _safeMint on purpose here to disallow callbacks and save gas
         }
+    }
+
+    /// @notice Burn a specified tray
+    /// @dev Callable by the owner, an authorized address, or the Namespace NFT (when fusing)
+    /// @param _id Tray ID
+    function burn(uint256 _id) external {
+        address trayOwner = ownerOf[_id];
+        if (
+            trayOwner != msg.sender &&
+            getApproved[_id] != msg.sender &&
+            !isApprovedForAll[trayOwner][msg.sender] &&
+            namespaceNFT != msg.sender
+        ) revert CallerNotAllowedToBurn();
+        _burn(_id);
     }
 
     /// @notice Get the information about one tile

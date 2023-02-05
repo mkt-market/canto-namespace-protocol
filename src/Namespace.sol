@@ -49,11 +49,11 @@ contract Namespace is ERC721 {
         uint256 numUniqueTrays;
         uint256[] memory uniqueTrays = new uint256[](_characterList.length);
         // Check for duplicate characters in the provided list. 1/2 * n^2 loop iterations, but n is bounded to 13 and we do not perform any storage operations
-        for (uint i; i < _characterList.length; ++i) {
+        for (uint256 i; i < numCharacters; ++i) {
             bool isLastTileEntry = true;
             uint256 trayID = _characterList[i].trayID;
             uint8 tileOffset = _characterList[i].tileOffset;
-            for (uint j = i + 1; j < _characterList.length; ++j) {
+            for (uint256 j = i + 1; j < numCharacters; ++j) {
                 if (_characterList[j].trayID == trayID) {
                     isLastTileEntry = false;
                     if (_characterList[j].tileOffset == tileOffset) revert FusingDuplicateCharactersNotAllowed();
@@ -61,22 +61,25 @@ contract Namespace is ERC721 {
             }
             if (isLastTileEntry) {
                 uniqueTrays[numUniqueTrays++] = trayID;
+                // Verify address is allowed to fuse
+                address trayOwner = tray.ownerOf(trayID);
+                if (
+                    trayOwner != msg.sender &&
+                    tray.getApproved(trayID) != msg.sender &&
+                    !tray.isApprovedForAll(trayOwner, msg.sender)
+                ) revert CallerNotAllowedToFuse();
             }
         }
-        // TODO: Verify Owner
         // TODO: Verify not minted yet
         // TODO: Burn (unique) trays in the end
         // TODO: Mint Namespace NFT and add metadata
-        for (uint256 i; i < _characterList.length; ++i) {
+        for (uint256 i; i < numCharacters; ++i) {
             uint256 trayId = _characterList[i].trayID;
-            address trayOwner = tray.ownerOf(trayId);
-            if (
-                trayOwner != msg.sender &&
-                tray.getApproved(trayId) != msg.sender &&
-                !tray.isApprovedForAll(trayOwner, msg.sender)
-            ) revert CallerNotAllowedToFuse();
             uint8 tileOffset = _characterList[i].tileOffset;
             Tray.TileData memory tileData = tray.getTile(trayId, tileOffset); // Will revert if tileOffset is too high
+        }
+        for (uint256 i; i < numUniqueTrays; ++i) {
+            tray.burn(uniqueTrays[i]);
         }
     }
 }
