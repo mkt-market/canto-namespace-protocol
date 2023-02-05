@@ -27,12 +27,17 @@ contract Namespace is ERC721 {
     /// @notice Next Namespace ID to mint. We start with minting at ID 1
     uint256 public nextNamespaceIDToMint;
 
+    /// @notice Maps names to NFT IDS
+    mapping(string => uint256) public nameToToken;
+
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToFuse();
+    error CallerNotAllowedToBurn();
     error TooManyCharactersProvided(uint256 numCharacters);
     error FusingDuplicateCharactersNotAllowed();
+    error NameAlreadyRegistered(uint256 nftID);
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
@@ -99,11 +104,26 @@ contract Namespace is ERC721 {
             mstore(bName, numBytes)
         }
         string memory nameToRegister = string(bName);
+        uint256 currentRegisteredID = nameToToken[nameToRegister];
+        if (currentRegisteredID != 0) revert NameAlreadyRegistered(currentRegisteredID);
+        uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
+        nameToToken[nameToRegister] = namespaceIDToMint;
+
         // TODO: Mint Namespace NFT and add metadata
         for (uint256 i; i < numUniqueTrays; ++i) {
             tray.burn(uniqueTrays[i]);
         }
-        _mint(msg.sender, ++nextNamespaceIDToMint);
+        _mint(msg.sender, namespaceIDToMint);
+    }
+
+    /// @notice Burn a specified Namespace NFT
+    /// @param _id Namespace NFT ID
+    function burn(uint256 _id) external {
+        address owner = ownerOf[_id];
+        if (owner != msg.sender && getApproved[_id] != msg.sender && !isApprovedForAll[owner][msg.sender])
+            revert CallerNotAllowedToBurn();
+        // TODO: Unset nameToToken based on associated string
+        _burn(_id);
     }
 
     function _emojiOffsetToByte(uint16 _emojiOffset) private pure returns (bytes memory) {
