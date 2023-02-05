@@ -24,6 +24,9 @@ contract Namespace is ERC721 {
         uint8 tileOffset;
     }
 
+    /// @notice Next Namespace ID to mint. We start with minting at ID 1
+    uint256 public nextNamespaceIDToMint;
+
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -38,28 +41,49 @@ contract Namespace is ERC721 {
     }
 
     /// TODO
-    function tokenURI(uint256 id) public view override returns (string memory) {}
+    function tokenURI(uint256 _id) public view override returns (string memory) {}
 
     /// @notice Fuse a new Namespace NFT with the referenced tiles
     /// @param _characterList The tiles to use for the fusing
     function fuse(CharacterData[] calldata _characterList) external {
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13) revert TooManyCharactersProvided(numCharacters);
+        bytes memory bName = new bytes(numCharacters * 4); // Used to convert into a string. Can be four times longer than the string at most (only 4-bytes emojis)
+        uint256 numBytes;
         // Extract unique trays for burning them later on
         uint256 numUniqueTrays;
         uint256[] memory uniqueTrays = new uint256[](_characterList.length);
-        // Check for duplicate characters in the provided list. 1/2 * n^2 loop iterations, but n is bounded to 13 and we do not perform any storage operations
         for (uint256 i; i < numCharacters; ++i) {
-            bool isLastTileEntry = true;
+            bool isLastTrayEntry = true;
             uint256 trayID = _characterList[i].trayID;
             uint8 tileOffset = _characterList[i].tileOffset;
+            // Check for duplicate characters in the provided list. 1/2 * n^2 loop iterations, but n is bounded to 13 and we do not perform any storage operations
             for (uint256 j = i + 1; j < numCharacters; ++j) {
                 if (_characterList[j].trayID == trayID) {
-                    isLastTileEntry = false;
+                    isLastTrayEntry = false;
                     if (_characterList[j].tileOffset == tileOffset) revert FusingDuplicateCharactersNotAllowed();
                 }
             }
-            if (isLastTileEntry) {
+            Tray.TileData memory tileData = tray.getTile(trayID, tileOffset); // Will revert if tileOffset is too high
+            if (tileData.fontClass == 0) {
+                // Emoji
+                bytes memory emojiAsBytes = _emojiOffsetToByte(tileData.characterIndex);
+                uint256 numBytesEmoji = emojiAsBytes.length;
+                for (uint256 j; j < numBytesEmoji; ++j) {
+                    bName[numBytes + j] = emojiAsBytes[j];
+                }
+                numBytes += numBytesEmoji;
+            } else {
+                // Normal text, convert characterIndex to ASCII index
+                uint16 characterIndex = tileData.characterIndex;
+                uint8 asciiStartingIndex = 48; // Starting index for numbers
+                if (characterIndex > 9) {
+                    asciiStartingIndex = 97; // Starting index for (lowercase) characters
+                }
+                bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // TODO: Check in Tray that no higher vals possible / this is validated
+            }
+            // We keep track of the unique trays NFTs (for burning them) and only check the owner once for the last occurence of the tray
+            if (isLastTrayEntry) {
                 uniqueTrays[numUniqueTrays++] = trayID;
                 // Verify address is allowed to fuse
                 address trayOwner = tray.ownerOf(trayID);
@@ -70,16 +94,20 @@ contract Namespace is ERC721 {
                 ) revert CallerNotAllowedToFuse();
             }
         }
-        // TODO: Verify not minted yet
-        // TODO: Burn (unique) trays in the end
-        // TODO: Mint Namespace NFT and add metadata
-        for (uint256 i; i < numCharacters; ++i) {
-            uint256 trayId = _characterList[i].trayID;
-            uint8 tileOffset = _characterList[i].tileOffset;
-            Tray.TileData memory tileData = tray.getTile(trayId, tileOffset); // Will revert if tileOffset is too high
+        // Set array to the real length (in bytes) to avoid zero bytes in the end when doing the string conversion
+        assembly {
+            mstore(bName, numBytes)
         }
+        string memory nameToRegister = string(bName);
+        // TODO: Mint Namespace NFT and add metadata
         for (uint256 i; i < numUniqueTrays; ++i) {
             tray.burn(uniqueTrays[i]);
         }
+        _mint(msg.sender, ++nextNamespaceIDToMint);
+    }
+
+    function _emojiOffsetToByte(uint16 _emojiOffset) private pure returns (bytes memory) {
+        // TODO: Return correct value for all 420 emojis...
+        return hex"F09F9881";
     }
 }

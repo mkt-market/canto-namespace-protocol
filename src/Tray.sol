@@ -44,8 +44,9 @@ contract Tray is ERC721 {
 
     /// @notice Font and character index of a tile
     struct TileData {
+        /// @notice Allowed values between 0 (emoji) and 9 (font5 rare)
         uint8 fontClass;
-        /// @notice For Emojis between 0..NUM_CHARS_EMOJIS, otherwise between 0..NUM_CHARS_LETTERS
+        /// @notice For Emojis (font class 0) between 0..NUM_CHARS_EMOJIS - 1, otherwise between 0..NUM_CHARS_LETTERS - 1
         uint16 characterIndex;
     }
 
