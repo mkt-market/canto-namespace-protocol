@@ -45,6 +45,7 @@ contract Namespace is ERC721 {
     error InvalidNumberOfCharacters(uint256 numCharacters);
     error FusingDuplicateCharactersNotAllowed();
     error NameAlreadyRegistered(uint256 nftID);
+    error TokenNotMinted(uint256 tokenID);
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
@@ -52,8 +53,12 @@ contract Namespace is ERC721 {
         tray = Tray(_tray);
     }
 
-    /// TODO
-    function tokenURI(uint256 _id) public view override returns (string memory) {}
+    /// @notice Get the token URI for the specified _id
+    /// @param _id ID to query for
+    function tokenURI(uint256 _id) public view override returns (string memory) {
+        if (ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
+        return StringImageUtils.generateSVG(nftCharacters[_id], false);
+    }
 
     /// @notice Fuse a new Namespace NFT with the referenced tiles
     /// @param _characterList The tiles to use for the fusing
