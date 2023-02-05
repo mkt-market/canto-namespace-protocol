@@ -28,6 +28,8 @@ contract Namespace is ERC721 {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToFuse();
+    error TooManyCharactersProvided(uint256 numCharacters);
+    error FusingDuplicateCharactersNotAllowed();
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
@@ -41,7 +43,27 @@ contract Namespace is ERC721 {
     /// @notice Fuse a new Namespace NFT with the referenced tiles
     /// @param _characterList The tiles to use for the fusing
     function fuse(CharacterData[] calldata _characterList) external {
-        // TODO: Check for duplicate tiles in characterList
+        uint256 numCharacters = _characterList.length;
+        if (numCharacters > 13) revert TooManyCharactersProvided(numCharacters);
+        // Extract unique trays for burning them later on
+        uint256 numUniqueTrays;
+        uint256[] memory uniqueTrays = new uint256[](_characterList.length);
+        // Check for duplicate characters in the provided list. 1/2 * n^2 loop iterations, but n is bounded to 13 and we do not perform any storage operations
+        for (uint i; i < _characterList.length; ++i) {
+            bool isLastTileEntry = true;
+            uint256 trayID = _characterList[i].trayID;
+            uint8 tileOffset = _characterList[i].tileOffset;
+            for (uint j = i + 1; j < _characterList.length; ++j) {
+                if (_characterList[j].trayID == trayID) {
+                    isLastTileEntry = false;
+                    if (_characterList[j].tileOffset == tileOffset) revert FusingDuplicateCharactersNotAllowed();
+                }
+            }
+            if (isLastTileEntry) {
+                uniqueTrays[numUniqueTrays++] = trayID;
+            }
+        }
+        // TODO: Verify Owner
         // TODO: Verify not minted yet
         // TODO: Burn (unique) trays in the end
         // TODO: Mint Namespace NFT and add metadata
