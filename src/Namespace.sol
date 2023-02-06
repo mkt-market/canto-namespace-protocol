@@ -100,7 +100,7 @@ contract Namespace is ERC721 {
                 if (characterIndex > 9) {
                     asciiStartingIndex = 87; // Starting index for (lowercase) characters - 10
                 }
-                bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // TODO: Check in Tray that no higher vals possible / this is validated
+                bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // Cannot overflow, characterIndex is always <= 36 for these font classes because of the generation procedure
             }
             // We keep track of the unique trays NFTs (for burning them) and only check the owner once for the last occurence of the tray
             if (isLastTrayEntry) {
