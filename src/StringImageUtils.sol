@@ -159,7 +159,7 @@ library StringImageUtils {
     function _iteratePRNG(uint256 _currState) private pure returns (uint256 iteratedState) {
         unchecked {
             iteratedState = _currState * 15485863;
-            iteratedState = iteratedState * iteratedState * iteratedState;
+            iteratedState = (iteratedState * iteratedState * iteratedState) % 2038074743;
         }
     }
 }
