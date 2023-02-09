@@ -5,22 +5,22 @@ import "./Tray.sol";
 
 /// @notice Utiltities for the on-chain SVG generation of the text data and pseudo randomness
 library Utils {
-    bytes constant FONT_SQUIGGLE =
+    bytes constant private FONT_SQUIGGLE =
         hex"CEB1E182A6C688D483D2BDCF9DC9A0D48BCEB9CA9DC699CA85C9B1C9B3CF83CF81CF99C9BECA82C69ACF85CA8BC9AF78E183A7C8A5";
 
-    bytes constant ZALGO_ABOVE_LETTER =
+    bytes constant private ZALGO_ABOVE_LETTER =
         hex"CC80CC81CC82CC83CC84CC85CC86CC87CC88CC89CC8ACC8BCC8CCC8DCC8ECC8FCC90CC91CC92CC93CC94CC95CC9ACC9BCCBDCCBECCBFCD80CD81CD82CD83CD84CD86CD8ACD8BCD8CCD90CD91CD92CD97CD98CD9BCD9DCD9ECDA0CDA1";
 
-    uint256 constant ZALGO_NUM_ABOVE = 46;
+    uint256 constant private ZALGO_NUM_ABOVE = 46;
 
-    bytes constant ZALGO_BELOW_LETTER =
+    bytes constant private ZALGO_BELOW_LETTER =
         hex"CC96CC97CC98CC99CC9CCC9DCC9ECC9FCCA0CCA1CCA2CCA3CCA4CCA5CCA6CCA7CCA8CCA9CCAACCABCCACCCADCCAECCAFCCB0CCB1CCB2CCB3CCB9CCBACCBBCCBCCD85CD87CD88CD89CD8DCD8ECD93CD94CD95CD96CD99CD9ACD9CCD9FCDA2";
 
-    uint256 constant ZALGO_NUM_BELOW = 47;
+    uint256 constant private ZALGO_NUM_BELOW = 47;
 
-    bytes constant ZALGO_OVER_LETTER = hex"CCB4CCB5CCB6CCB7CCB8";
+    bytes constant private ZALGO_OVER_LETTER = hex"CCB4CCB5CCB6CCB7CCB8";
 
-    uint256 constant ZALGO_NUM_OVER = 5;
+    uint256 constant private ZALGO_NUM_OVER = 5;
 
     /// @notice Convert a given font class, character index, and a seed (for font classes with randomness) to their Unicode representation as bytes
     /// @param _fontClass The class to convert
@@ -100,7 +100,6 @@ library Utils {
                 unicodeStartingIndex = 120198; // 1D586
             } else if (_fontClass == 6) {
                 // Squiggle
-                // TODO: Optimize/Library
                 // Font: αႦƈԃҽϝɠԋιʝƙʅɱɳσρϙɾʂƚυʋɯxყȥ
                 // Hex encoding: CEB1 E182A6 C688 D483 D2BD CF9D C9A0 D48B CEB9 CA9D C699 CA85 C9B1 C9B3 CF83 CF81 CF99 C9BE CA82 C69A CF85 CA8B C9AF 78 E183A7 C8A5
                 if (letterIndex == 0) {
