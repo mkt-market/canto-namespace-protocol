@@ -3,8 +3,8 @@ pragma solidity >=0.8.0;
 
 import "./Tray.sol";
 
-/// @notice Utiltities for the on-chain SVG generation of the text data
-library StringImageUtils {
+/// @notice Utiltities for the on-chain SVG generation of the text data and pseudo randomness
+library Utils {
     bytes constant FONT_SQUIGGLE =
         hex"CEB1E182A6C688D483D2BDCF9DC9A0D48BCEB9CA9DC699CA85C9B1C9B3CF83CF81CF99C9BECA82C69ACF85CA8BC9AF78E183A7C8A5";
 
@@ -49,13 +49,13 @@ library StringImageUtils {
             }
             uint256 numAbove = (_seed % 7) + 1;
             // We do not reuse the same seed for the following generations to avoid any symmetries, e.g. that 2 chars above would also always result in 2 chars below
-            _seed = _iteratePRNG(_seed);
+            _seed = iteratePRNG(_seed);
             uint256 numMiddle = _seed % 2;
-            _seed = _iteratePRNG(_seed);
+            _seed = iteratePRNG(_seed);
             uint256 numBelow = (_seed % 7) + 1;
             bytes memory character = abi.encodePacked(bytes1(asciiStartingIndex + uint8(_characterIndex)));
             for (uint256 i; i < numAbove; ++i) {
-                _seed = _iteratePRNG(_seed);
+                _seed = iteratePRNG(_seed);
                 uint256 characterIndex = (_seed % ZALGO_NUM_ABOVE) * 2;
                 character = abi.encodePacked(
                     character,
@@ -64,7 +64,7 @@ library StringImageUtils {
                 );
             }
             for (uint256 i; i < numMiddle; ++i) {
-                _seed = _iteratePRNG(_seed);
+                _seed = iteratePRNG(_seed);
                 uint256 characterIndex = (_seed % ZALGO_NUM_OVER) * 2;
                 character = abi.encodePacked(
                     character,
@@ -73,7 +73,7 @@ library StringImageUtils {
                 );
             }
             for (uint256 i; i < numBelow; ++i) {
-                _seed = _iteratePRNG(_seed);
+                _seed = iteratePRNG(_seed);
                 uint256 characterIndex = (_seed % ZALGO_NUM_BELOW) * 2;
                 character = abi.encodePacked(
                     character,
@@ -156,7 +156,7 @@ library StringImageUtils {
     /// @notice Simple PRNG to generate new numbers based on the current state
     /// @param _currState Current state of the PRNG (initially the seed)
     /// @return iteratedState New number
-    function _iteratePRNG(uint256 _currState) private pure returns (uint256 iteratedState) {
+    function iteratePRNG(uint256 _currState) public pure returns (uint256 iteratedState) {
         unchecked {
             iteratedState = _currState * 15485863;
             iteratedState = (iteratedState * iteratedState * iteratedState) % 2038074743;

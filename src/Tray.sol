@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import "./StringImageUtils.sol";
+import "./Utils.sol";
 
 contract Tray is ERC721 {
     /*//////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ contract Tray is ERC721 {
         for (uint256 i; i < TILES_PER_TRAY; ++i) {
             nftTiles[i] = storedNftTiles[i];
         }
-        return StringImageUtils.generateSVG(nftTiles, true);
+        return Utils.generateSVG(nftTiles, true);
     }
 
     /// @notice Buy a specifiable amount of trays
@@ -147,11 +147,12 @@ contract Tray is ERC721 {
 
     function _drawing(uint256 _seed) private pure returns (TileData memory tileData) {
         uint256 res = _seed % SUM_ODDS;
+        uint256 charRandValue = Utils.iteratePRNG(_seed); // Iterate PRNG to not have any biasedness / correlation between random numbers
         if (res < 32) {
             // Class is 0 in that case
-            tileData.characterIndex = uint16(_seed % NUM_CHARS_EMOJIS); // TODO: This might be biased
+            tileData.characterIndex = uint16(charRandValue % NUM_CHARS_EMOJIS);
         } else {
-            tileData.characterIndex = uint16(_seed % NUM_CHARS_LETTERS); // TODO: This might be biased
+            tileData.characterIndex = uint16(charRandValue % NUM_CHARS_LETTERS);
             if (res < 64) {
                 tileData.fontClass = 1;
             } else if (res < 80) {
@@ -164,7 +165,8 @@ contract Tray is ERC721 {
                 tileData.fontClass = 7 + uint8((res - 104) / 2);
                 if (tileData.fontClass == 7) {
                     // Set seed for Zalgo to ensure same characters will be always generated for this tile
-                    tileData.seed = uint8(_seed % 256); // We use the same seed here on purpose as it's just important that this seed stays fixed at some number
+                    uint256 zalgoSeed = Utils.iteratePRNG(_seed);
+                    tileData.seed = uint8(zalgoSeed % 256);
                 }
             } else {
                 tileData.fontClass = 9;

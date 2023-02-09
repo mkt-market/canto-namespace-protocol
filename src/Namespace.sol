@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import "./Tray.sol";
-import "./StringImageUtils.sol";
+import "./Utils.sol";
 
 contract Namespace is ERC721 {
     /*//////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ contract Namespace is ERC721 {
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
-        return StringImageUtils.generateSVG(nftCharacters[_id], false);
+        return Utils.generateSVG(nftCharacters[_id], false);
     }
 
     /// @notice Fuse a new Namespace NFT with the referenced tiles
@@ -87,7 +87,7 @@ contract Namespace is ERC721 {
             nftToMintCharacters.push(tileData);
             if (tileData.fontClass == 0) {
                 // Emoji
-                bytes memory emojiAsBytes = StringImageUtils.characterToUnicodeBytes(0, tileData.characterIndex, 0);
+                bytes memory emojiAsBytes = Utils.characterToUnicodeBytes(0, tileData.characterIndex, 0);
                 uint256 numBytesEmoji = emojiAsBytes.length;
                 for (uint256 j; j < numBytesEmoji; ++j) {
                     bName[numBytes + j] = emojiAsBytes[j];
