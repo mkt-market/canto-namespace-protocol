@@ -18,12 +18,15 @@ contract UtilsTest is DSTest {
 
     function testSVGEmojis() public {
         Tray.TileData[] memory _tiles = new Tray.TileData[](7);
-        for (uint i; i < 420; ++i) {
+        for (uint256 i; i < 420; ++i) {
             Tray.TileData memory tileData = _tiles[i % 7];
             tileData.fontClass = 0;
             tileData.characterIndex = uint16(i);
             if (i % 7 == 0) {
-                vm.writeFile(string.concat("utils/data/emojis", vm.toString(i / 7), ".svg"), Utils.generateSVG(_tiles, true));
+                vm.writeFile(
+                    string.concat("utils/data/emojis", vm.toString(i / 7), ".svg"),
+                    Utils.generateSVG(_tiles, true)
+                );
                 _tiles = new Tray.TileData[](7);
             }
         }

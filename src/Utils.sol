@@ -188,14 +188,18 @@ library Utils {
                 "<tspan ",
                 tspanAttributes,
                 ">",
-                string(hex"E28089"), string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].seed)), string(hex"E28089"),
+                string(hex"E28089"),
+                string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].seed)),
+                string(hex"E28089"),
                 "</tspan>"
             );
         }
         uint256 svgWidth = _tiles.length * 20;
         return
             string.concat(
-                '<svg viewBox="0 0 ', LibString.toString(svgWidth),' 1" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">',
+                '<svg viewBox="0 0 ',
+                LibString.toString(svgWidth),
+                ' 1" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">',
                 textData,
                 "</text></svg>"
             );

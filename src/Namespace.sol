@@ -56,7 +56,7 @@ contract Namespace is ERC721 {
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        if (ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
+        if (_ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
         return Utils.generateSVG(nftCharacters[_id], false);
     }
 
@@ -133,7 +133,7 @@ contract Namespace is ERC721 {
     /// @notice Burn a specified Namespace NFT
     /// @param _id Namespace NFT ID
     function burn(uint256 _id) external {
-        address owner = ownerOf[_id];
+        address owner = ownerOf(_id);
         if (owner != msg.sender && getApproved[_id] != msg.sender && !isApprovedForAll[owner][msg.sender])
             revert CallerNotAllowedToBurn();
         string memory associatedName = tokenToName[_id];

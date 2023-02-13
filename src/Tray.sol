@@ -91,7 +91,7 @@ contract Tray is ERC721 {
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        if (ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
+        if (_ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
         TileData[] memory nftTiles = new TileData[](TILES_PER_TRAY);
@@ -121,7 +121,7 @@ contract Tray is ERC721 {
     /// @dev Callable by the owner, an authorized address, or the Namespace NFT (when fusing)
     /// @param _id Tray ID
     function burn(uint256 _id) external {
-        address trayOwner = ownerOf[_id];
+        address trayOwner = ownerOf(_id);
         if (
             namespaceNFT != msg.sender &&
             trayOwner != msg.sender &&
