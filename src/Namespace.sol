@@ -69,7 +69,7 @@ contract Namespace is ERC721 {
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
         uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
-        bytes memory bName = new bytes(numCharacters * 4); // Used to convert into a string. Can be four times longer than the string at most (only 4-bytes emojis)
+        bytes memory bName = new bytes(numCharacters * 14); // Used to convert into a string. Can be fourteen times longer than the string at most (longest emoji)
         uint256 numBytes;
         // Extract unique trays for burning them later on
         uint256 numUniqueTrays;
@@ -86,14 +86,11 @@ contract Namespace is ERC721 {
                 }
             }
             Tray.TileData memory tileData = tray.getTile(trayID, tileOffset); // Will revert if tileOffset is too high
-            nftToMintCharacters.push(tileData);
             if (tileData.fontClass == 0) {
                 // Emoji
-                bytes memory emojiAsBytes = Utils.characterToUnicodeBytes(
-                    0,
-                    tileData.characterIndex,
-                    _characterList[i].skinToneModifier
-                );
+                uint8 skinToneModifier = _characterList[i].skinToneModifier;
+                bytes memory emojiAsBytes = Utils.characterToUnicodeBytes(0, tileData.characterIndex, skinToneModifier);
+                tileData.characterModifier = skinToneModifier;
                 uint256 numBytesEmoji = emojiAsBytes.length;
                 for (uint256 j; j < numBytesEmoji; ++j) {
                     bName[numBytes + j] = emojiAsBytes[j];
@@ -102,12 +99,13 @@ contract Namespace is ERC721 {
             } else {
                 // Normal text, convert characterIndex to ASCII index
                 uint16 characterIndex = tileData.characterIndex;
-                uint8 asciiStartingIndex = 48; // Starting index for numbers
-                if (characterIndex > 9) {
-                    asciiStartingIndex = 87; // Starting index for (lowercase) characters - 10
+                uint8 asciiStartingIndex = 97; // Starting index for (lowercase) characters
+                if (characterIndex > 25) {
+                    asciiStartingIndex = 23; // Starting index for (lowercase) characters - 25
                 }
-                bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // Cannot overflow, characterIndex is always <= 36 for these font classes because of the generation procedure
+                bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // Cannot overflow, characterIndex is always < 36 for these font classes because of the generation procedure
             }
+            nftToMintCharacters.push(tileData);
             // We keep track of the unique trays NFTs (for burning them) and only check the owner once for the last occurence of the tray
             if (isLastTrayEntry) {
                 uniqueTrays[numUniqueTrays++] = trayID;

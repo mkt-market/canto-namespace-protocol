@@ -57,7 +57,6 @@ library Utils {
         uint256 _characterModifier
     ) public pure returns (bytes memory) {
         if (_fontClass == 0) {
-            // TODO: Skin Tone modifier
             uint256 byteOffset;
             uint256 numBytes;
             bool supportsSkinToneModifier;
@@ -109,17 +108,14 @@ library Utils {
             return character;
         } else if (_fontClass == 1) {
             // Basic, sans-serif text
-            uint8 asciiStartingIndex = 48; // Starting index for numbers
-            if (_characterIndex > 9) {
-                asciiStartingIndex = 87; // Starting index for (lowercase) characters - 10
+            uint8 asciiStartingIndex = 97; // Starting index for (lowercase) characters
+            if (_characterIndex > 25) {
+                asciiStartingIndex = 23; // Starting index for (lowercase) characters - 25
             }
             return abi.encodePacked(bytes1(asciiStartingIndex + uint8(_characterIndex)));
         } else if (_fontClass == 7) {
             // Zalgo
-            uint8 asciiStartingIndex = 48;
-            if (_characterIndex > 9) {
-                asciiStartingIndex = 87;
-            }
+            uint8 asciiStartingIndex = 97;
             uint256 numAbove = (_characterModifier % 7) + 1;
             // We do not reuse the same seed for the following generations to avoid any symmetries, e.g. that 2 chars above would also always result in 2 chars below
             _characterModifier = iteratePRNG(_characterModifier);
@@ -156,9 +152,7 @@ library Utils {
             }
             return character;
         } else {
-            // TODO: Numbers that do not have a symbol
             uint24 unicodeStartingIndex;
-            uint256 letterIndex = _characterIndex - 10;
             if (_fontClass == 2) {
                 // Script
                 unicodeStartingIndex = 119990; // 1D4B6
@@ -175,16 +169,16 @@ library Utils {
                 // Squiggle
                 // Font: αႦƈԃҽϝɠԋιʝƙʅɱɳσρϙɾʂƚυʋɯxყȥ
                 // Hex encoding: CEB1 E182A6 C688 D483 D2BD CF9D C9A0 D48B CEB9 CA9D C699 CA85 C9B1 C9B3 CF83 CF81 CF99 C9BE CA82 C69A CF85 CA8B C9AF 78 E183A7 C8A5
-                if (letterIndex == 0) {
+                if (_characterIndex == 0) {
                     return abi.encodePacked(FONT_SQUIGGLE[0], FONT_SQUIGGLE[1]);
-                } else if (letterIndex == 1) {
+                } else if (_characterIndex == 1) {
                     return abi.encodePacked(FONT_SQUIGGLE[2], FONT_SQUIGGLE[3], FONT_SQUIGGLE[4]);
-                } else if (letterIndex < 23 || letterIndex == 25) {
-                    uint256 offset = (letterIndex - 2) * 2;
+                } else if (_characterIndex < 23 || _characterIndex == 25) {
+                    uint256 offset = (_characterIndex - 2) * 2;
                     return abi.encodePacked(FONT_SQUIGGLE[5 + offset], FONT_SQUIGGLE[6 + offset]);
-                } else if (letterIndex == 23) {
+                } else if (_characterIndex == 23) {
                     return abi.encodePacked(FONT_SQUIGGLE[47]);
-                } else if (letterIndex == 24) {
+                } else if (_characterIndex == 24) {
                     return abi.encodePacked(FONT_SQUIGGLE[48], FONT_SQUIGGLE[49], FONT_SQUIGGLE[50]);
                 }
             } else if (_fontClass == 8) {
@@ -194,7 +188,7 @@ library Utils {
                 // Blocks inverted
                 unicodeStartingIndex = 127344; // 1F170
             }
-            return bytes(abi.encodePacked(unicodeStartingIndex + letterIndex));
+            return bytes(abi.encodePacked(unicodeStartingIndex + _characterIndex));
         }
     }
 

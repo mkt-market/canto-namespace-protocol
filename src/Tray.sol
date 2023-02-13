@@ -21,7 +21,10 @@ contract Tray is ERC721 {
     uint256 private constant NUM_CHARS_EMOJIS = 420;
 
     /// @notice Number of characters for letters
-    uint256 private constant NUM_CHARS_LETTERS = 36;
+    uint256 private constant NUM_CHARS_LETTERS = 26;
+
+    /// @notice Number of characters for letters and numbers
+    uint256 private constant NUM_CHARS_LETTERS_NUMBERS = 36;
 
     /// @notice Price of one tray in $NOTE
     uint256 public immutable trayPrice;
@@ -155,6 +158,7 @@ contract Tray is ERC721 {
             tileData.characterIndex = uint16(charRandValue % NUM_CHARS_LETTERS);
             if (res < 64) {
                 tileData.fontClass = 1;
+                tileData.characterIndex = uint16(charRandValue % NUM_CHARS_LETTERS_NUMBERS);
             } else if (res < 80) {
                 tileData.fontClass = 2;
             } else if (res < 96) {
