@@ -23,6 +23,8 @@ contract Namespace is ERC721 {
         uint256 trayID;
         /// @notice Offset of the tile within the tray. Valid values 0..TILES_PER_TRAY - 1
         uint8 tileOffset;
+        /// @notice Emoji modifier for the skin tone. Can have values of 0 (yellow) and 1 - 5 (light to dark). Only supported by some emojis
+        uint8 skinToneModifier;
     }
 
     /// @notice Next Namespace ID to mint. We start with minting at ID 1
@@ -87,7 +89,11 @@ contract Namespace is ERC721 {
             nftToMintCharacters.push(tileData);
             if (tileData.fontClass == 0) {
                 // Emoji
-                bytes memory emojiAsBytes = Utils.characterToUnicodeBytes(0, tileData.characterIndex, 0);
+                bytes memory emojiAsBytes = Utils.characterToUnicodeBytes(
+                    0,
+                    tileData.characterIndex,
+                    _characterList[i].skinToneModifier
+                );
                 uint256 numBytesEmoji = emojiAsBytes.length;
                 for (uint256 j; j < numBytesEmoji; ++j) {
                     bName[numBytes + j] = emojiAsBytes[j];

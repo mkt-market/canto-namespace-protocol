@@ -6,6 +6,12 @@ import {LibString} from "solmate/utils/LibString.sol";
 
 /// @notice Utiltities for the on-chain SVG generation of the text data and pseudo randomness
 library Utils {
+    /*//////////////////////////////////////////////////////////////
+                                 ERRORS
+    //////////////////////////////////////////////////////////////*/
+    error EmojiDoesNotSupportSkinToneModifier(uint16 emojiIndex);
+    error InvalidSkinToneModifierProvided(uint256 characterModifier);
+
     bytes private constant FONT_SQUIGGLE =
         hex"CEB1E182A6C688D483D2BDCF9DC9A0D48BCEB9CA9DC699CA85C9B1C9B3CF83CF81CF99C9BECA82C69ACF85CA8BC9AF78E183A7C8A5";
 
@@ -54,12 +60,15 @@ library Utils {
             // TODO: Skin Tone modifier
             uint256 byteOffset;
             uint256 numBytes;
+            bool supportsSkinToneModifier;
             if (_characterIndex < EMOJIS_LE_THREE_BYTES) {
                 numBytes = 3;
                 byteOffset = _characterIndex * 3;
+                supportsSkinToneModifier = _characterIndex >= EMOJIS_LE_THREE_BYTES - EMOJIS_MOD_SKIN_TONE_THREE_BYTES;
             } else if (_characterIndex < EMOJIS_LE_FOUR_BYTES) {
                 numBytes = 4;
                 byteOffset = EMOJIS_BYTE_OFFSET_FOUR_BYTES + (_characterIndex - EMOJIS_LE_THREE_BYTES) * 4;
+                supportsSkinToneModifier = _characterIndex >= EMOJIS_LE_FOUR_BYTES - EMOJIS_MOD_SKIN_TONE_FOUR_BYTES;
             } else if (_characterIndex < EMOJIS_LE_SIX_BYTES) {
                 numBytes = 6;
                 byteOffset = EMOJIS_BYTE_OFFSET_SIX_BYTES + (_characterIndex - EMOJIS_LE_FOUR_BYTES) * 6;
@@ -80,6 +89,22 @@ library Utils {
             );
             for (uint256 i = 3; i < numBytes; ++i) {
                 character = abi.encodePacked(character, EMOJIS[byteOffset + i]);
+            }
+            if (_characterModifier != 0) {
+                if (!supportsSkinToneModifier) revert EmojiDoesNotSupportSkinToneModifier(_characterIndex);
+                if (_characterModifier == 1) {
+                    character = abi.encodePacked(character, hex"F09F8FBB");
+                } else if (_characterModifier == 2) {
+                    character = abi.encodePacked(character, hex"F09F8FBC");
+                } else if (_characterModifier == 3) {
+                    character = abi.encodePacked(character, hex"F09F8FBD");
+                } else if (_characterModifier == 4) {
+                    character = abi.encodePacked(character, hex"F09F8FBE");
+                } else if (_characterModifier == 5) {
+                    character = abi.encodePacked(character, hex"F09F8FBF");
+                } else {
+                    revert InvalidSkinToneModifierProvided(_characterModifier);
+                }
             }
             return character;
         } else if (_fontClass == 1) {
@@ -189,7 +214,9 @@ library Utils {
                 tspanAttributes,
                 ">",
                 string(hex"E28089"),
-                string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].characterModifier)),
+                string(
+                    characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].characterModifier)
+                ),
                 string(hex"E28089"),
                 "</tspan>"
             );
