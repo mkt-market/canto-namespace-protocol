@@ -101,7 +101,7 @@ contract Namespace is ERC721 {
                 uint16 characterIndex = tileData.characterIndex;
                 uint8 asciiStartingIndex = 97; // Starting index for (lowercase) characters
                 if (characterIndex > 25) {
-                    asciiStartingIndex = 23; // Starting index for (lowercase) characters - 25
+                    asciiStartingIndex = 22; // Starting index for (lowercase) characters - 25
                 }
                 bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // Cannot overflow, characterIndex is always < 36 for these font classes because of the generation procedure
             }

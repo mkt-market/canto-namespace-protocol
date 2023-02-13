@@ -110,7 +110,7 @@ library Utils {
             // Basic, sans-serif text
             uint8 asciiStartingIndex = 97; // Starting index for (lowercase) characters
             if (_characterIndex > 25) {
-                asciiStartingIndex = 23; // Starting index for (lowercase) characters - 25
+                asciiStartingIndex = 22; // Starting index for (lowercase) characters - 25
             }
             return abi.encodePacked(bytes1(asciiStartingIndex + uint8(_characterIndex)));
         } else if (_fontClass == 7) {

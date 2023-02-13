@@ -25,19 +25,36 @@ contract UtilsTest is DSTest {
                 numModifier = 5;
             }
             for (uint256 modifierIndex; modifierIndex <= numModifier; ++modifierIndex) {
-                if ((numGenerated > 0 && numGenerated % 7 == 0) || i == 419) {
+                Tray.TileData memory tileData;
+                tileData.fontClass = 0;
+                tileData.characterIndex = uint16(i);
+                tileData.characterModifier = uint8(modifierIndex);
+                _tiles[numGenerated % 7] = tileData;
+                if ((numGenerated > 0 && (numGenerated + 1) % 7 == 0) || i == 419) {
                     vm.writeFile(
                         string.concat("utils/data/emojis", vm.toString(numGenerated / 7), ".svg"),
                         Utils.generateSVG(_tiles, true)
                     );
                     _tiles = new Tray.TileData[](7);
                 }
-                Tray.TileData memory tileData;
-                tileData.fontClass = 0;
-                tileData.characterIndex = uint16(i);
-                tileData.characterModifier = uint8(modifierIndex);
-                _tiles[numGenerated % 7] = tileData;
                 numGenerated++;
+            }
+        }
+    }
+
+    function testFont1() public {
+        Tray.TileData[] memory _tiles = new Tray.TileData[](7);
+        for (uint256 i; i < 42; ++i) {
+            Tray.TileData memory tileData;
+            tileData.fontClass = 1;
+            tileData.characterIndex = uint16(i % 36);
+            _tiles[i % 7] = tileData;
+            if ((i > 0 && (i + 1) % 7 == 0)) {
+                vm.writeFile(
+                    string.concat("utils/data/font1_", vm.toString(i / 7), ".svg"),
+                    Utils.generateSVG(_tiles, true)
+                );
+                _tiles = new Tray.TileData[](7);
             }
         }
     }
