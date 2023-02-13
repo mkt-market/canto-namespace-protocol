@@ -179,7 +179,7 @@ library Utils {
         string memory textData;
         string memory tspanAttributes = 'dx="1"';
         if (_isTray) {
-            tspanAttributes = 'dx="1" style="outline: 1px solid black;"';
+            tspanAttributes = 'dx="2" style="outline: 0.5px solid black;"';
         }
         for (uint256 i; i < _tiles.length; ++i) {
             textData = string.concat(
@@ -193,7 +193,7 @@ library Utils {
         }
         return
             string.concat(
-                '<svg viewBox="0 0 200 30" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">',
+                '<svg viewBox="0 0 200 30" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">', // TODO: Width (20 * length), height 20
                 textData,
                 "</text></svg>"
             );
