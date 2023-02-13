@@ -36,10 +36,10 @@ library Utils {
     uint256 private constant EMOJIS_MOD_SKIN_TONE_FOUR_BYTES = 47;
     // 0 for 7, 8, 14 bytes
     uint256 private constant EMOJIS_BYTE_OFFSET_FOUR_BYTES = 51; // 17 * 3
-    uint256 private constant EMOJIS_BYTE_OFFSET_SIX_BYTES = 1327; // 17 * 3 + 319 * 4
-    uint256 private constant EMOJIS_BYTE_OFFSET_SEVEN_BYTES = 1483; // 17 * 3 + 319 * 4 + 26 * 6
-    uint256 private constant EMOJIS_BYTE_OFFSET_EIGHT_BYTES = 1532; // 17 * 3 + 319 * 4 + 26 * 6 + 7 * 7
-    uint256 private constant EMOJIS_BYTE_OFFSET_FOURTEEN_BYTES = 1556; // 17 * 3 + 319 * 4 + 26 * 6 + 7 * 7 + 3 * 8
+    uint256 private constant EMOJIS_BYTE_OFFSET_SIX_BYTES = 1515; // 17 * 3 + 366 * 4
+    uint256 private constant EMOJIS_BYTE_OFFSET_SEVEN_BYTES = 1671; // 17 * 3 + 366 * 4 + 26 * 6
+    uint256 private constant EMOJIS_BYTE_OFFSET_EIGHT_BYTES = 1720; // 17 * 3 + 366 * 4 + 26 * 6 + 7 * 7
+    uint256 private constant EMOJIS_BYTE_OFFSET_FOURTEEN_BYTES = 1744; // 17 * 3 + 366 * 4 + 26 * 6 + 7 * 7 + 3 * 8
 
     /// @notice Convert a given font class, character index, and a seed (for font classes with randomness) to their Unicode representation as bytes
     /// @param _fontClass The class to convert
@@ -194,7 +194,7 @@ library Utils {
                 "</tspan>"
             );
         }
-        uint256 svgWidth = _tiles.length * 20;
+        uint256 svgWidth = _tiles.length * 23;
         return
             string.concat(
                 '<svg viewBox="0 0 ',
