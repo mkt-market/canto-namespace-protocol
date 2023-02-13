@@ -4,10 +4,12 @@ pragma solidity >=0.8.0;
 import {DSTest} from "ds-test/test.sol";
 import {Utilities} from "./utils/Utilities.sol";
 import {console} from "./utils/Console.sol";
-import {Vm} from "forge-std/Vm.sol";
+import "forge-std/Test.sol";
+import {Utils} from "../Utils.sol";
+import "../Tray.sol";
 
-contract ContractTest is DSTest {
-    Vm internal immutable vm = Vm(HEVM_ADDRESS);
+contract UtilsTest is DSTest {
+    // Vm internal immutable vm = Vm(HEVM_ADDRESS);
 
     Utilities internal utils;
     address payable[] internal users;
@@ -17,17 +19,16 @@ contract ContractTest is DSTest {
         users = utils.createUsers(5);
     }
 
-    function testExample() public {
-        address payable alice = users[0];
-        // labels alice's address in call traces as "Alice [<address>]"
-        vm.label(alice, "Alice");
-        console.log("alice's address", alice);
-        address payable bob = users[1];
-        vm.label(bob, "Bob");
-
-        vm.prank(alice);
-        (bool sent, ) = bob.call{value: 10 ether}("");
-        assertTrue(sent);
-        assertGt(bob.balance, alice.balance);
+    function testSVGEmojis() public {
+        Tray.TileData[] memory _tiles = new Tray.TileData[](7);
+        for (uint i; i < 420; ++i) {
+            Tray.TileData memory tileData = _tiles[i % 7];
+            tileData.fontClass = 0;
+            tileData.characterIndex = uint16(i);
+            if (i % 7 == 0) {
+                vm.writeLine("emoji.svg", Utils.generateSVG(_tiles, true));
+                _tiles = new Tray.TileData[](7);
+            }
+        }
     }
 }

@@ -2,3 +2,4 @@
 optimizer = true
 optimizer_runs = 1_000
 via-ir=true
+fs_permissions = [{ access = "read-write", path = "./"}]

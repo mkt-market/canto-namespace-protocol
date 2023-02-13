@@ -28,9 +28,10 @@ emoji_string = ""
 for length, emoji_data in sorted(emojis_by_length.items()):
   skin_tone_modifiable = [e for e in emoji_data if e[2]]
   skin_tone_non_modfiable = [e for e in emoji_data if not e[2]]
-  print("Length in bytes: {}".format(length))
+  print("Length in bytes: {}".format(length / 2))
   print("Number of emojis without modifiable skin tone: {}".format(len(skin_tone_non_modfiable)))
   print("Number of emojis with modifiable skin tone: {}".format(len(skin_tone_modifiable)))
+  print("Total: {}".format(len(skin_tone_modifiable) + len(skin_tone_non_modfiable)))
   for emoji in skin_tone_non_modfiable + skin_tone_modifiable:
     emoji_string += emoji[0]
     encoding_string += emoji[1]
