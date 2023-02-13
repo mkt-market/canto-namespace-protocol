@@ -49,8 +49,8 @@ contract Tray is ERC721 {
         uint8 fontClass;
         /// @notice For Emojis (font class 0) between 0..NUM_CHARS_EMOJIS - 1, otherwise between 0..NUM_CHARS_LETTERS - 1
         uint16 characterIndex;
-        /// @notice For generative fonts with randomness (Zalgo), we generate and fix this on minting
-        uint8 seed;
+        /// @notice For generative fonts with randomness (Zalgo), we generate and fix this on minting. For some emojis, it can be set by the user to influence the skin color
+        uint8 characterModifier;
     }
 
     /// @notice Stores the content of a tray, i.e. all tiles
@@ -166,7 +166,7 @@ contract Tray is ERC721 {
                 if (tileData.fontClass == 7) {
                     // Set seed for Zalgo to ensure same characters will be always generated for this tile
                     uint256 zalgoSeed = Utils.iteratePRNG(_seed);
-                    tileData.seed = uint8(zalgoSeed % 256);
+                    tileData.characterModifier = uint8(zalgoSeed % 256);
                 }
             } else {
                 tileData.fontClass = 9;

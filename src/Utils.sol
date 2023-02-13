@@ -44,11 +44,11 @@ library Utils {
     /// @notice Convert a given font class, character index, and a seed (for font classes with randomness) to their Unicode representation as bytes
     /// @param _fontClass The class to convert
     /// @param _characterIndex Index within the class
-    /// @param _seed Pseudorandom seed. Needs to be the same for every call for the given class / index combination to ensure consistency
+    /// @param _characterModifier Some characters have numeric modifiers (skin tone modifier for emojis, seed generated at minting for zalgo)
     function characterToUnicodeBytes(
         uint8 _fontClass,
         uint16 _characterIndex,
-        uint256 _seed
+        uint256 _characterModifier
     ) public pure returns (bytes memory) {
         if (_fontClass == 0) {
             // TODO: Skin Tone modifier
@@ -95,16 +95,16 @@ library Utils {
             if (_characterIndex > 9) {
                 asciiStartingIndex = 87;
             }
-            uint256 numAbove = (_seed % 7) + 1;
+            uint256 numAbove = (_characterModifier % 7) + 1;
             // We do not reuse the same seed for the following generations to avoid any symmetries, e.g. that 2 chars above would also always result in 2 chars below
-            _seed = iteratePRNG(_seed);
-            uint256 numMiddle = _seed % 2;
-            _seed = iteratePRNG(_seed);
-            uint256 numBelow = (_seed % 7) + 1;
+            _characterModifier = iteratePRNG(_characterModifier);
+            uint256 numMiddle = _characterModifier % 2;
+            _characterModifier = iteratePRNG(_characterModifier);
+            uint256 numBelow = (_characterModifier % 7) + 1;
             bytes memory character = abi.encodePacked(bytes1(asciiStartingIndex + uint8(_characterIndex)));
             for (uint256 i; i < numAbove; ++i) {
-                _seed = iteratePRNG(_seed);
-                uint256 characterIndex = (_seed % ZALGO_NUM_ABOVE) * 2;
+                _characterModifier = iteratePRNG(_characterModifier);
+                uint256 characterIndex = (_characterModifier % ZALGO_NUM_ABOVE) * 2;
                 character = abi.encodePacked(
                     character,
                     ZALGO_ABOVE_LETTER[characterIndex],
@@ -112,8 +112,8 @@ library Utils {
                 );
             }
             for (uint256 i; i < numMiddle; ++i) {
-                _seed = iteratePRNG(_seed);
-                uint256 characterIndex = (_seed % ZALGO_NUM_OVER) * 2;
+                _characterModifier = iteratePRNG(_characterModifier);
+                uint256 characterIndex = (_characterModifier % ZALGO_NUM_OVER) * 2;
                 character = abi.encodePacked(
                     character,
                     ZALGO_OVER_LETTER[characterIndex],
@@ -121,8 +121,8 @@ library Utils {
                 );
             }
             for (uint256 i; i < numBelow; ++i) {
-                _seed = iteratePRNG(_seed);
-                uint256 characterIndex = (_seed % ZALGO_NUM_BELOW) * 2;
+                _characterModifier = iteratePRNG(_characterModifier);
+                uint256 characterIndex = (_characterModifier % ZALGO_NUM_BELOW) * 2;
                 character = abi.encodePacked(
                     character,
                     ZALGO_BELOW_LETTER[characterIndex],
@@ -189,7 +189,7 @@ library Utils {
                 tspanAttributes,
                 ">",
                 string(hex"E28089"),
-                string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].seed)),
+                string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].characterModifier)),
                 string(hex"E28089"),
                 "</tspan>"
             );
