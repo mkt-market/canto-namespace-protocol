@@ -200,11 +200,11 @@ library Utils {
     /// @param _isTray If true, a border will be added around the tiles
     function generateSVG(Tray.TileData[] memory _tiles, bool _isTray) public pure returns (string memory) {
         string memory innerData;
-        uint256 dx = 350 / (_tiles.length + 1);
+        uint256 dx = 400 / (_tiles.length + 1);
         for (uint256 i; i < _tiles.length; ++i) {
             innerData = string.concat(
                 innerData,
-                '<text dominant-baseline="middle" text-anchor="middle" y="40" x="',
+                '<text dominant-baseline="middle" text-anchor="middle" y="100" x="',
                 LibString.toString(dx * (i + 1)),
                 '">',
                 string(
@@ -215,7 +215,7 @@ library Utils {
             if (_isTray) {
                 innerData = string.concat(
                     innerData,
-                    '<rect width="34" height="60" y="10" x="',
+                    '<rect width="34" height="60" y="70" x="',
                     LibString.toString(dx * (i + 1) - 17),
                     '" stroke="black" stroke-width="1" fill="none"></rect>'
                 );
@@ -223,7 +223,7 @@ library Utils {
         }
         return
             string.concat(
-                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 80"><style>text { font-family: sans-serif; font-size: 30px; }</style>',
+                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 400 200"><style>text { font-family: sans-serif; font-size: 30px; }</style>',
                 innerData,
                 "</svg>"
             );
