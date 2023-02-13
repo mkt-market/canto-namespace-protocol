@@ -152,19 +152,22 @@ library Utils {
             }
             return character;
         } else {
-            uint24 unicodeStartingIndex;
+            bytes memory startingSequence;
             if (_fontClass == 2) {
                 // Script
-                unicodeStartingIndex = 119990; // 1D4B6
+                if (_characterIndex == 4) return hex"F09D9192";
+                if (_characterIndex == 6) return hex"F09D9194";
+                if (_characterIndex == 14) return hex"F09D919C";
+                startingSequence = hex"F09D92B6";
             } else if (_fontClass == 3) {
                 // Script Bold
-                unicodeStartingIndex = 120042; // 1D4EA
+                startingSequence = hex"F09D93AA";
             } else if (_fontClass == 4) {
                 // Olde
-                unicodeStartingIndex = 120094; // 1D51E
+                startingSequence = hex"F09D949E";
             } else if (_fontClass == 5) {
                 // Olde Bold
-                unicodeStartingIndex = 120198; // 1D586
+                startingSequence = hex"F09D9686";
             } else if (_fontClass == 6) {
                 // Squiggle
                 // Font: αႦƈԃҽϝɠԋιʝƙʅɱɳσρϙɾʂƚυʋɯxყȥ
@@ -183,12 +186,12 @@ library Utils {
                 }
             } else if (_fontClass == 8) {
                 // Blocks
-                unicodeStartingIndex = 127280; // 1F130
+                startingSequence = hex"F09F84B0";
             } else if (_fontClass == 9) {
                 // Blocks inverted
-                unicodeStartingIndex = 127344; // 1F170
+                startingSequence = hex"F09F85B0";
             }
-            return bytes(abi.encodePacked(unicodeStartingIndex + _characterIndex));
+            return getUtfSequence(startingSequence, uint8(_characterIndex));
         }
     }
 
@@ -234,5 +237,19 @@ library Utils {
             iteratedState = _currState * 15485863;
             iteratedState = (iteratedState * iteratedState * iteratedState) % 2038074743;
         }
+    }
+
+    /// @dev Only works with 4 byte UTF-8 sequences
+    function getUtfSequence(bytes memory _startingSequence, uint8 _characterIndex) private pure returns (bytes memory) {
+        uint8 lastByteVal = uint8(_startingSequence[3]);
+        uint8 lastByteSum = lastByteVal + _characterIndex;
+        if (lastByteSum < 192) {
+            _startingSequence[3] = bytes1(lastByteSum);
+        } else {
+            lastByteVal = 128 + lastByteSum % 192;
+            _startingSequence[2] = bytes1(uint8(_startingSequence[2]) + 1);
+            _startingSequence[3] = bytes1(lastByteVal);
+        }
+        return _startingSequence;
     }
 }

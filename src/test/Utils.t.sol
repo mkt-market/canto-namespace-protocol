@@ -58,4 +58,25 @@ contract UtilsTest is DSTest {
             }
         }
     }
+
+    function testOtherFonts() public {
+        Tray.TileData[] memory _tiles = new Tray.TileData[](7);
+        uint256 startingFont;
+        for (uint256 i; i < 8 * 26; ++i) {
+            Tray.TileData memory tileData;
+            uint256 fontNumber = 2 + i / 26;
+            if (i % 7 == 0) startingFont = fontNumber;
+            tileData.fontClass = uint8(fontNumber);
+            tileData.characterIndex = uint16(i % 26);
+            tileData.characterModifier = uint8(i);
+            _tiles[i % 7] = tileData;
+            if ((i > 0 && (i + 1) % 7 == 0) || i == 8 * 26 - 1) {
+                vm.writeFile(
+                    string.concat("utils/data/font", vm.toString(startingFont), "_", vm.toString(i / 7), ".svg"),
+                    Utils.generateSVG(_tiles, true)
+                );
+                _tiles = new Tray.TileData[](7);
+            }
+        }
+    }
 }
