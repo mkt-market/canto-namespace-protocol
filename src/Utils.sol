@@ -199,33 +199,33 @@ library Utils {
     /// @param _tiles Tiles to generate the SVG for
     /// @param _isTray If true, a border will be added around the tiles
     function generateSVG(Tray.TileData[] memory _tiles, bool _isTray) public pure returns (string memory) {
-        string memory textData;
-        string memory tspanAttributes = 'dx="1"';
-        if (_isTray) {
-            tspanAttributes = 'dx="2" style="outline: 0.5px solid black;"';
-        }
+        string memory innerData;
+        uint256 dx = 350 / (_tiles.length + 1);
         for (uint256 i; i < _tiles.length; ++i) {
-            textData = string.concat(
-                textData,
-                "<tspan ",
-                tspanAttributes,
-                ">",
-                string(hex"E28089"),
+            innerData = string.concat(
+                innerData,
+                '<text dominant-baseline="middle" text-anchor="middle" y="40" x="',
+                LibString.toString(dx * (i + 1)),
+                '">',
                 string(
                     characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].characterModifier)
                 ),
-                string(hex"E28089"),
-                "</tspan>"
+                "</text>"
             );
+            if (_isTray) {
+                innerData = string.concat(
+                    innerData,
+                    '<rect width="34" height="60" y="10" x="',
+                    LibString.toString(dx * (i + 1) - 17),
+                    '" stroke="black" stroke-width="1" fill="none"></rect>'
+                );
+            }
         }
-        uint256 svgWidth = _tiles.length * 23;
         return
             string.concat(
-                '<svg viewBox="0 0 ',
-                LibString.toString(svgWidth),
-                ' 1" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">',
-                textData,
-                "</text></svg>"
+                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 80"><style>text { font-family: sans-serif; font-size: 30px; }</style>',
+                innerData,
+                "</svg>"
             );
     }
 
@@ -246,7 +246,7 @@ library Utils {
         if (lastByteSum < 192) {
             _startingSequence[3] = bytes1(lastByteSum);
         } else {
-            lastByteVal = 128 + lastByteSum % 192;
+            lastByteVal = 128 + (lastByteSum % 192);
             _startingSequence[2] = bytes1(uint8(_startingSequence[2]) + 1);
             _startingSequence[3] = bytes1(lastByteVal);
         }
