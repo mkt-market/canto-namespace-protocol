@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "./Tray.sol";
+import {LibString} from "solmate/utils/LibString.sol";
 
 /// @notice Utiltities for the on-chain SVG generation of the text data and pseudo randomness
 library Utils {
@@ -187,13 +188,14 @@ library Utils {
                 "<tspan ",
                 tspanAttributes,
                 ">",
-                string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].seed)),
+                string(hex"E28089"), string(characterToUnicodeBytes(_tiles[i].fontClass, _tiles[i].characterIndex, _tiles[i].seed)), string(hex"E28089"),
                 "</tspan>"
             );
         }
+        uint256 svgWidth = _tiles.length * 20;
         return
             string.concat(
-                '<svg viewBox="0 0 200 30" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">', // TODO: Width (20 * length), height 20
+                '<svg viewBox="0 0 ', LibString.toString(svgWidth),' 1" xmlns="http://www.w3.org/2000/svg"><text font-family="sans-serif">',
                 textData,
                 "</text></svg>"
             );
