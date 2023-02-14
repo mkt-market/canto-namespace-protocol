@@ -101,7 +101,7 @@ contract Tray is ERC721 {
         for (uint256 i; i < TILES_PER_TRAY; ++i) {
             nftTiles[i] = storedNftTiles[i];
         }
-        return Utils.generateSVG(nftTiles, true);
+        return Utils.generateSVG(nftTiles, true); // TODO: JSON / Base64
     }
 
     /// @notice Buy a specifiable amount of trays

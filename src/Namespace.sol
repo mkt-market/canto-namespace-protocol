@@ -13,6 +13,12 @@ contract Namespace is ERC721 {
     /// @notice Reference to the Tray NFT
     Tray public immutable tray;
 
+    /// @notice Reference to the $NOTE TOKEN
+    ERC20 public immutable note;
+
+    /// @notice Wallet that receives the revenue
+    address private immutable revenueAddress;
+
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -51,15 +57,23 @@ contract Namespace is ERC721 {
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
-    constructor(address _tray) ERC721("Namespaces", "NS") {
+    /// @param _note Address of the $NOTE token
+    /// @param _revenueAddress Adress to send the revenue to
+    constructor(
+        address _tray,
+        address _note,
+        address _revenueAddress
+    ) ERC721("Namespaces", "NS") {
         tray = Tray(_tray);
+        note = ERC20(_note);
+        revenueAddress = _revenueAddress;
     }
 
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (_ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
-        return Utils.generateSVG(nftCharacters[_id], false);
+        return Utils.generateSVG(nftCharacters[_id], false); // TODO: JSON / Base64
     }
 
     /// @notice Fuse a new Namespace NFT with the referenced tiles
@@ -67,6 +81,8 @@ contract Namespace is ERC721 {
     function fuse(CharacterData[] calldata _characterList) external {
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
+        uint256 fusingCosts = 2**(13 - numCharacters) * 1e18;
+        SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, fusingCosts);
         uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
         bytes memory bName = new bytes(numCharacters * 14); // Used to convert into a string. Can be fourteen times longer than the string at most (longest emoji)
