@@ -8,6 +8,7 @@ import {Owned} from "solmate/auth/Owned.sol";
 import {LibString} from "solmate/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import "./Utils.sol";
+import "../interface/Turnstile.sol";
 
 contract Tray is ERC721A, Owned {
     /*//////////////////////////////////////////////////////////////
@@ -106,6 +107,9 @@ contract Tray is ERC721A, Owned {
         revenueAddress = _revenueAddress;
         note = ERC20(_note);
         namespaceNFT = _namespaceNFT;
+        // Register CSR
+        Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
+        turnstile.register(msg.sender);
     }
 
     /// @notice Get the token URI for the specified _id

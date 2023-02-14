@@ -6,6 +6,7 @@ import {Owned} from "solmate/auth/Owned.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import "./Tray.sol";
 import "./Utils.sol";
+import "../interface/Turnstile.sol";
 
 contract Namespace is ERC721, Owned {
     /*//////////////////////////////////////////////////////////////
@@ -76,6 +77,9 @@ contract Namespace is ERC721, Owned {
         tray = Tray(_tray);
         note = ERC20(_note);
         revenueAddress = _revenueAddress;
+        // Register CSR
+        Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
+        turnstile.register(msg.sender);
     }
 
     /// @notice Get the token URI for the specified _id
