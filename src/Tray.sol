@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {ERC721} from "solmate/tokens/ERC721.sol";
+import {ERC721A} from "erc721a/ERC721A.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
@@ -9,7 +9,7 @@ import {LibString} from "solmate/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import "./Utils.sol";
 
-contract Tray is ERC721, Owned {
+contract Tray is ERC721A, Owned {
     /*//////////////////////////////////////////////////////////////
                                  CONSTANTS
     //////////////////////////////////////////////////////////////*/
@@ -65,9 +65,6 @@ contract Tray is ERC721, Owned {
     /// @notice Last hash that was used to generate a tray
     bytes32 public lastHash;
 
-    /// @notice Next Tray ID to mint. We start with minting at ID 1
-    uint256 public nextTrayIDToMint;
-
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -92,7 +89,7 @@ contract Tray is ERC721, Owned {
         address _revenueAddress,
         address _note,
         address _namespaceNFT
-    ) ERC721("Namespaces Tray", "NSTRAY") Owned(msg.sender) {
+    ) ERC721A("Namespaces Tray", "NSTRAY") Owned(msg.sender) {
         lastHash = _initHash;
         trayPrice = _trayPrice;
         revenueAddress = _revenueAddress;
@@ -103,7 +100,7 @@ contract Tray is ERC721, Owned {
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        if (_ownerOf[_id] == address(0)) revert TrayNotMinted(_id);
+        if (ownerOf(_id) == address(0)) revert TrayNotMinted(_id);
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
         TileData[] memory nftTiles = new TileData[](TILES_PER_TRAY);
@@ -130,16 +127,16 @@ contract Tray is ERC721, Owned {
     /// @param _amount Amount of trays to buy
     function buy(uint256 _amount) external {
         SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
+        uint256 startingTrayId = _nextTokenId();
         for (uint256 i; i < _amount; ++i) {
-            uint256 trayId = ++nextTrayIDToMint;
             TileData[TILES_PER_TRAY] memory trayTiledata;
             for (uint256 j; j < TILES_PER_TRAY; ++j) {
                 lastHash = keccak256(abi.encode(lastHash));
                 trayTiledata[j] = _drawing(uint256(lastHash));
             }
-            tiles[trayId] = trayTiledata;
-            _mint(msg.sender, trayId); // We do not use _safeMint on purpose here to disallow callbacks and save gas
+            tiles[startingTrayId + i] = trayTiledata;
         }
+        _mint(msg.sender, _amount); // We do not use _safeMint on purpose here to disallow callbacks and save gas
     }
 
     /// @notice Burn a specified tray
@@ -150,8 +147,8 @@ contract Tray is ERC721, Owned {
         if (
             namespaceNFT != msg.sender &&
             trayOwner != msg.sender &&
-            getApproved[_id] != msg.sender &&
-            !isApprovedForAll[trayOwner][msg.sender]
+            getApproved(_id) != msg.sender &&
+            !isApprovedForAll(trayOwner, msg.sender)
         ) revert CallerNotAllowedToBurn();
         delete tiles[_id];
         _burn(_id);
@@ -162,7 +159,7 @@ contract Tray is ERC721, Owned {
     /// @param _trayId Tray to query
     /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
     function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
-        if (_ownerOf[_trayId] == address(0)) revert TrayNotMinted(_trayId);
+        if (ownerOf(_trayId) == address(0)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId][_tileOffset];
     }
 
@@ -170,7 +167,7 @@ contract Tray is ERC721, Owned {
     /// @dev Reverts for non-existing tray ID
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
-        if (_ownerOf[_trayId] == address(0)) revert TrayNotMinted(_trayId);
+        if (ownerOf(_trayId) == address(0)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId];
     }
 
@@ -218,5 +215,10 @@ contract Tray is ERC721, Owned {
                 tileData.fontClass = 9;
             }
         }
+    }
+
+    /// @dev Overridden function of ERC721A to start minting at 1
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
     }
 }
