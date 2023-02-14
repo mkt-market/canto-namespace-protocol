@@ -29,6 +29,9 @@ contract Tray is ERC721A, Owned {
     /// @notice Number of characters for letters and numbers
     uint256 private constant NUM_CHARS_LETTERS_NUMBERS = 36;
 
+    /// @notice Number of characters for letters and numbers
+    uint256 private constant PRE_LAUNCH_MINT_CAP = 1_000;
+
     /// @notice Price of one tray in $NOTE
     uint256 public immutable trayPrice;
 
@@ -65,17 +68,25 @@ contract Tray is ERC721A, Owned {
     /// @notice Last hash that was used to generate a tray
     bytes32 public lastHash;
 
+    /// @notice Set to the number of minted NFTs after the prelaunch has ended
+    uint256 private prelaunchMinted = type(uint256).max;
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
     event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
     event NoteAddressUpdate(address indexed oldNoteAddress, address indexed newNoteAddress);
+    event PrelaunchEnded();
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToBurn();
     error TrayNotMinted(uint256 tokenID);
+    error OnlyOwnerCanMintPreLaunch();
+    error MintExceedsPreLaunchAmount();
+    error PrelaunchTrayCannotBeUsedAfterPrelaunch(uint256 startTokenId);
+    error PrelaunchAlreadyEnded();
 
     /// @notice Sets the initial hash, tray price, and the revenue address
     /// @param _initHash Hash to initialize the system with. Will determine the generation sequence of the trays
@@ -126,8 +137,14 @@ contract Tray is ERC721A, Owned {
     /// @notice Buy a specifiable amount of trays
     /// @param _amount Amount of trays to buy
     function buy(uint256 _amount) external {
-        SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
         uint256 startingTrayId = _nextTokenId();
+        if (prelaunchMinted == type(uint256).max) {
+            // Still in prelaunch phase
+            if (msg.sender != owner) revert OnlyOwnerCanMintPreLaunch();
+            if (startingTrayId + _amount > PRE_LAUNCH_MINT_CAP) revert MintExceedsPreLaunchAmount();
+        } else {
+            SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
+        }
         for (uint256 i; i < _amount; ++i) {
             TileData[TILES_PER_TRAY] memory trayTiledata;
             for (uint256 j; j < TILES_PER_TRAY; ++j) {
@@ -185,6 +202,27 @@ contract Tray is ERC721A, Owned {
         address currentRevenueAddress = revenueAddress;
         revenueAddress = _newRevenueAddress;
         emit RevenueAddressUpdated(currentRevenueAddress, _newRevenueAddress);
+    }
+
+    /// @notice End the prelaunch phase and start the public mint
+    function endPrelaunchPhase() external onlyOwner {
+        if (prelaunchMinted != type(uint256).max) revert PrelaunchAlreadyEnded();
+        prelaunchMinted = _nextTokenId() - 1;
+        emit PrelaunchEnded();
+    }
+
+    function _beforeTokenTransfers(
+        address, /* from*/
+        address to,
+        uint256 startTokenId,
+        uint256 /* quantity*/
+    ) internal view override {
+        uint256 numPrelaunchMinted = prelaunchMinted;
+        if (numPrelaunchMinted != type(uint256).max) {
+            // We do not allow any transfers of the prelaunch trays after the phase has ended
+            if (startTokenId <= numPrelaunchMinted && to != address(0))
+                revert PrelaunchTrayCannotBeUsedAfterPrelaunch(startTokenId);
+        }
     }
 
     function _drawing(uint256 _seed) private pure returns (TileData memory tileData) {
