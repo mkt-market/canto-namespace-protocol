@@ -50,6 +50,7 @@ contract Namespace is ERC721, Owned {
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
+    event NamespaceFused(address indexed fuser, uint256 indexed namespaceId, string indexed name);
     event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
     event NoteAddressUpdate(address indexed oldNoteAddress, address indexed newNoteAddress);
 
@@ -100,7 +101,6 @@ contract Namespace is ERC721, Owned {
     /// @notice Fuse a new Namespace NFT with the referenced tiles
     /// @param _characterList The tiles to use for the fusing
     function fuse(CharacterData[] calldata _characterList) external {
-        // TODO: Events
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
         uint256 fusingCosts = 2**(13 - numCharacters) * 1e18;
@@ -170,13 +170,15 @@ contract Namespace is ERC721, Owned {
             tray.burn(uniqueTrays[i]);
         }
         _mint(msg.sender, namespaceIDToMint);
+        // Although _mint already emits an event, we additionally emit one because of the name
+        emit NamespaceFused(msg.sender, namespaceIDToMint, nameToRegister);
     }
 
     /// @notice Burn a specified Namespace NFT
     /// @param _id Namespace NFT ID
     function burn(uint256 _id) external {
-        address owner = ownerOf(_id);
-        if (owner != msg.sender && getApproved[_id] != msg.sender && !isApprovedForAll[owner][msg.sender])
+        address nftOwner = ownerOf(_id);
+        if (nftOwner != msg.sender && getApproved[_id] != msg.sender && !isApprovedForAll[nftOwner][msg.sender])
             revert CallerNotAllowedToBurn();
         string memory associatedName = tokenToName[_id];
         delete tokenToName[_id];
