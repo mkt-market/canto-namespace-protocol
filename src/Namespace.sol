@@ -48,6 +48,12 @@ contract Namespace is ERC721, Owned {
     mapping(uint256 => Tray.TileData[]) private nftCharacters;
 
     /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
+    event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
+    event NoteAddressUpdate(address indexed oldNoteAddress, address indexed newNoteAddress);
+
+    /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToFuse();
@@ -181,12 +187,16 @@ contract Namespace is ERC721, Owned {
     /// @notice Change the address of the $NOTE token
     /// @param _newNoteAddress New address to use
     function changeNoteAddress(address _newNoteAddress) external onlyOwner {
+        address currentNoteAddress = address(note);
         note = ERC20(_newNoteAddress);
+        emit NoteAddressUpdate(currentNoteAddress, _newNoteAddress);
     }
 
     /// @notice Change the revenue address
     /// @param _newRevenueAddress New address to use
     function changeRevenueAddress(address _newRevenueAddress) external onlyOwner {
+        address currentRevenueAddress = revenueAddress;
         revenueAddress = _newRevenueAddress;
+        emit RevenueAddressUpdated(currentRevenueAddress, _newRevenueAddress);
     }
 }
