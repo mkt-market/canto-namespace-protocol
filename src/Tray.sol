@@ -72,7 +72,7 @@ contract Tray is ERC721, Owned {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToBurn();
-    error TokenNotMinted(uint256 tokenID);
+    error TrayNotMinted(uint256 tokenID);
 
     /// @notice Sets the initial hash, tray price, and the revenue address
     /// @param _initHash Hash to initialize the system with. Will determine the generation sequence of the trays
@@ -97,7 +97,7 @@ contract Tray is ERC721, Owned {
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        if (_ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
+        if (_ownerOf[_id] == address(0)) revert TrayNotMinted(_id);
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
         TileData[] memory nftTiles = new TileData[](TILES_PER_TRAY);
@@ -147,6 +147,7 @@ contract Tray is ERC721, Owned {
             getApproved[_id] != msg.sender &&
             !isApprovedForAll[trayOwner][msg.sender]
         ) revert CallerNotAllowedToBurn();
+        delete tiles[_id];
         _burn(_id);
     }
 
@@ -154,13 +155,14 @@ contract Tray is ERC721, Owned {
     /// @param _trayId Tray to query
     /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
     function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
-        // TODO: Does this revert for non-existing tray ID?
+        if (_ownerOf[_trayId] == address(0)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId][_tileOffset];
     }
 
     /// @notice Query all tiles of a tray
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
+        if (_ownerOf[_trayId] == address(0)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId];
     }
 
