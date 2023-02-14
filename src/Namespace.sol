@@ -2,10 +2,11 @@
 pragma solidity >=0.8.0;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
+import {Owned} from "solmate/auth/Owned.sol";
 import "./Tray.sol";
 import "./Utils.sol";
 
-contract Namespace is ERC721 {
+contract Namespace is ERC721, Owned {
     /*//////////////////////////////////////////////////////////////
                                  ADDRESSES
     //////////////////////////////////////////////////////////////*/
@@ -14,10 +15,10 @@ contract Namespace is ERC721 {
     Tray public immutable tray;
 
     /// @notice Reference to the $NOTE TOKEN
-    ERC20 public immutable note;
+    ERC20 public note;
 
     /// @notice Wallet that receives the revenue
-    address private immutable revenueAddress;
+    address private revenueAddress;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -63,7 +64,7 @@ contract Namespace is ERC721 {
         address _tray,
         address _note,
         address _revenueAddress
-    ) ERC721("Namespaces", "NS") {
+    ) ERC721("Namespaces", "NS") Owned(msg.sender) {
         tray = Tray(_tray);
         note = ERC20(_note);
         revenueAddress = _revenueAddress;
@@ -79,6 +80,7 @@ contract Namespace is ERC721 {
     /// @notice Fuse a new Namespace NFT with the referenced tiles
     /// @param _characterList The tiles to use for the fusing
     function fuse(CharacterData[] calldata _characterList) external {
+        // TODO: Events
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
         uint256 fusingCosts = 2**(13 - numCharacters) * 1e18;
@@ -160,5 +162,17 @@ contract Namespace is ERC721 {
         delete tokenToName[_id];
         delete nameToToken[associatedName];
         _burn(_id);
+    }
+
+    /// @notice Change the address of the $NOTE token
+    /// @param _newNoteAddress New address to use
+    function changeNoteAddress(address _newNoteAddress) external onlyOwner {
+        note = ERC20(_newNoteAddress);
+    }
+
+    /// @notice Change the revenue address
+    /// @param _newRevenueAddress New address to use
+    function changeRevenueAddress(address _newRevenueAddress) external onlyOwner {
+        revenueAddress = _newRevenueAddress;
     }
 }

@@ -4,9 +4,10 @@ pragma solidity >=0.8.0;
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {Owned} from "solmate/auth/Owned.sol";
 import "./Utils.sol";
 
-contract Tray is ERC721 {
+contract Tray is ERC721, Owned {
     /*//////////////////////////////////////////////////////////////
                                  CONSTANTS
     //////////////////////////////////////////////////////////////*/
@@ -34,10 +35,10 @@ contract Tray is ERC721 {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Wallet that receives the revenue
-    address private immutable revenueAddress;
+    address private revenueAddress;
 
     /// @notice Reference to the $NOTE TOKEN
-    ERC20 public immutable note;
+    ERC20 public note;
 
     /// @notice Reference to the Namespace NFT contract
     address public immutable namespaceNFT;
@@ -83,7 +84,7 @@ contract Tray is ERC721 {
         address _revenueAddress,
         address _note,
         address _namespaceNFT
-    ) ERC721("Namespaces Tray", "NSTRAY") {
+    ) ERC721("Namespaces Tray", "NSTRAY") Owned(msg.sender) {
         lastHash = _initHash;
         trayPrice = _trayPrice;
         revenueAddress = _revenueAddress;
@@ -146,6 +147,18 @@ contract Tray is ERC721 {
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
         tileData = tiles[_trayId];
+    }
+
+    /// @notice Change the address of the $NOTE token
+    /// @param _newNoteAddress New address to use
+    function changeNoteAddress(address _newNoteAddress) external onlyOwner {
+        note = ERC20(_newNoteAddress);
+    }
+
+    /// @notice Change the revenue address
+    /// @param _newRevenueAddress New address to use
+    function changeRevenueAddress(address _newRevenueAddress) external onlyOwner {
+        revenueAddress = _newRevenueAddress;
     }
 
     function _drawing(uint256 _seed) private pure returns (TileData memory tileData) {
