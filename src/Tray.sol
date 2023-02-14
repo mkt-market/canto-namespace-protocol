@@ -152,6 +152,7 @@ contract Tray is ERC721, Owned {
     }
 
     /// @notice Get the information about one tile
+    /// @dev Reverts for non-existing tray ID
     /// @param _trayId Tray to query
     /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
     function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
@@ -160,6 +161,7 @@ contract Tray is ERC721, Owned {
     }
 
     /// @notice Query all tiles of a tray
+    /// @dev Reverts for non-existing tray ID
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
         if (_ownerOf[_trayId] == address(0)) revert TrayNotMinted(_trayId);
