@@ -5,6 +5,8 @@ import {ERC721} from "solmate/tokens/ERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
+import {LibString} from "solmate/utils/LibString.sol";
+import {Base64} from "solady/utils/Base64.sol";
 import "./Utils.sol";
 
 contract Tray is ERC721, Owned {
@@ -102,7 +104,20 @@ contract Tray is ERC721, Owned {
         for (uint256 i; i < TILES_PER_TRAY; ++i) {
             nftTiles[i] = storedNftTiles[i];
         }
-        return Utils.generateSVG(nftTiles, true); // TODO: JSON / Base64
+        string memory json = Base64.encode(
+            bytes(
+                string(
+                    abi.encodePacked(
+                        '{"name": "Tray #',
+                        LibString.toString(_id),
+                        '", "image": "data:image/svg+xml;base64,',
+                        Base64.encode(bytes(Utils.generateSVG(nftTiles, true))),
+                        '"}'
+                    )
+                )
+            )
+        );
+        return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
     /// @notice Buy a specifiable amount of trays

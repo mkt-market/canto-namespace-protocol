@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {Owned} from "solmate/auth/Owned.sol";
+import {Base64} from "solady/utils/Base64.sol";
 import "./Tray.sol";
 import "./Utils.sol";
 
@@ -74,7 +75,20 @@ contract Namespace is ERC721, Owned {
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (_ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
-        return Utils.generateSVG(nftCharacters[_id], false); // TODO: JSON / Base64
+        string memory json = Base64.encode(
+            bytes(
+                string(
+                    abi.encodePacked(
+                        '{"name": "',
+                        tokenToName[_id],
+                        '", "image": "data:image/svg+xml;base64,',
+                        Base64.encode(bytes(Utils.generateSVG(nftCharacters[_id], false))),
+                        '"}'
+                    )
+                )
+            )
+        );
+        return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
     /// @notice Fuse a new Namespace NFT with the referenced tiles
