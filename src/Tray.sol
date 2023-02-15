@@ -107,9 +107,11 @@ contract Tray is ERC721A, Owned {
         revenueAddress = _revenueAddress;
         note = ERC20(_note);
         namespaceNFT = _namespaceNFT;
-        // Register CSR
-        Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
-        turnstile.register(msg.sender);
+        if (block.chainid == 7700) {
+            // Register CSR on Canto mainnnet
+            Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
+            turnstile.register(tx.origin);
+        }
     }
 
     /// @notice Get the token URI for the specified _id
