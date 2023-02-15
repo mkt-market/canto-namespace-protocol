@@ -111,7 +111,7 @@ contract Namespace is ERC721, Owned {
         SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, fusingCosts);
         uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
-        bytes memory bName = new bytes(numCharacters * 14); // Used to convert into a string. Can be fourteen times longer than the string at most (longest emoji)
+        bytes memory bName = new bytes(numCharacters * 33); // Used to convert into a string. Can be 33 times longer than the string at most (longest zalgo characters is 33 bytes)
         uint256 numBytes;
         // Extract unique trays for burning them later on
         uint256 numUniqueTrays;
@@ -128,25 +128,18 @@ contract Namespace is ERC721, Owned {
                 }
             }
             Tray.TileData memory tileData = tray.getTile(trayID, tileOffset); // Will revert if tileOffset is too high
+            uint8 characterModifier = tileData.characterModifier;
             if (tileData.fontClass == 0) {
                 // Emoji
-                uint8 skinToneModifier = _characterList[i].skinToneModifier;
-                bytes memory emojiAsBytes = Utils.characterToUnicodeBytes(0, tileData.characterIndex, skinToneModifier);
-                tileData.characterModifier = skinToneModifier;
-                uint256 numBytesEmoji = emojiAsBytes.length;
-                for (uint256 j; j < numBytesEmoji; ++j) {
-                    bName[numBytes + j] = emojiAsBytes[j];
-                }
-                numBytes += numBytesEmoji;
-            } else {
-                // Normal text, convert characterIndex to ASCII index
-                uint16 characterIndex = tileData.characterIndex;
-                uint8 asciiStartingIndex = 97; // Starting index for (lowercase) characters
-                if (characterIndex > 25) {
-                    asciiStartingIndex = 22; // Starting index for (lowercase) characters - 25
-                }
-                bName[numBytes++] = bytes1(asciiStartingIndex + uint8(characterIndex)); // Cannot overflow, characterIndex is always < 36 for these font classes because of the generation procedure
+                characterModifier = _characterList[i].skinToneModifier;
             }
+            bytes memory charAsBytes = Utils.characterToUnicodeBytes(0, tileData.characterIndex, characterModifier);
+            tileData.characterModifier = characterModifier;
+            uint256 numBytesChar = charAsBytes.length;
+            for (uint256 j; j < numBytesChar; ++j) {
+                bName[numBytes + j] = charAsBytes[j];
+            }
+            numBytes += numBytesChar;
             nftToMintCharacters.push(tileData);
             // We keep track of the unique trays NFTs (for burning them) and only check the owner once for the last occurence of the tray
             if (isLastTrayEntry) {
