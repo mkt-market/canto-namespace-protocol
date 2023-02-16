@@ -74,7 +74,7 @@ library Utils {
         uint8 _fontClass,
         uint16 _characterIndex,
         uint256 _characterModifier
-    ) public pure returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         if (_fontClass == 0) {
             // Emojis
             uint256 byteOffset;
@@ -219,7 +219,7 @@ library Utils {
     /// @notice Generate the SVG for the given tiles
     /// @param _tiles Tiles to generate the SVG for
     /// @param _isTray If true, a border will be added around the tiles
-    function generateSVG(Tray.TileData[] memory _tiles, bool _isTray) public pure returns (string memory) {
+    function generateSVG(Tray.TileData[] memory _tiles, bool _isTray) internal pure returns (string memory) {
         string memory innerData;
         uint256 dx = 400 / (_tiles.length + 1);
         for (uint256 i; i < _tiles.length; ++i) {
@@ -253,7 +253,7 @@ library Utils {
     /// @notice Simple PRNG to generate new numbers based on the current state
     /// @param _currState Current state of the PRNG (initially the seed)
     /// @return iteratedState New number
-    function iteratePRNG(uint256 _currState) public pure returns (uint256 iteratedState) {
+    function iteratePRNG(uint256 _currState) internal pure returns (uint256 iteratedState) {
         unchecked {
             iteratedState = _currState * 15485863;
             iteratedState = (iteratedState * iteratedState * iteratedState) % 2038074743;
