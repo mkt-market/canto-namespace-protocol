@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {Utilities} from "./utils/Utilities.sol";
 import "forge-std/Test.sol";
 import "../Tray.sol";
 
-contract UtilsTest is DSTest {
+contract GenSamples {
+    address constant HEVM_ADDRESS = address(bytes20(uint160(uint256(keccak256("hevm cheat code")))));
+
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
 
-    Utilities internal utils;
-    address payable[] internal users;
-
-    function setUp() public {
-        utils = new Utilities();
-        users = utils.createUsers(5);
+    function run() public {
+        genSVGEmojis();
+        font1();
+        otherFonts();
+        sampleTiles();
     }
 
-    function testSVGEmojis() public {
+    function genSVGEmojis() public {
         Tray.TileData[] memory _tiles = new Tray.TileData[](7);
         uint256 numGenerated;
         for (uint256 i; i < 420; ++i) {
@@ -42,7 +42,7 @@ contract UtilsTest is DSTest {
         }
     }
 
-    function testFont1() public {
+    function font1() public {
         Tray.TileData[] memory _tiles = new Tray.TileData[](7);
         for (uint256 i; i < 42; ++i) {
             Tray.TileData memory tileData;
@@ -59,7 +59,7 @@ contract UtilsTest is DSTest {
         }
     }
 
-    function testOtherFonts() public {
+    function otherFonts() public {
         Tray.TileData[] memory _tiles = new Tray.TileData[](7);
         uint256 startingFont;
         for (uint256 i; i < 8 * 26; ++i) {
@@ -80,7 +80,7 @@ contract UtilsTest is DSTest {
         }
     }
 
-    function testSampleTiles() public {
+    function sampleTiles() public {
         Tray.TileData[] memory _tiles = new Tray.TileData[](7);
         _tiles[0].fontClass = 0;
         _tiles[0].characterIndex = 20;
@@ -95,10 +95,7 @@ contract UtilsTest is DSTest {
         _tiles[5].characterIndex = 9;
         _tiles[6].fontClass = 5;
         _tiles[6].characterIndex = 17;
-        vm.writeFile(
-            string.concat("utils/data/sample_tray1.svg"),
-            Utils.generateSVG(_tiles, true)
-        );
+        vm.writeFile(string.concat("utils/data/sample_tray1.svg"), Utils.generateSVG(_tiles, true));
         _tiles[0].fontClass = 6;
         _tiles[0].characterIndex = 20;
         _tiles[1].fontClass = 7;
@@ -115,10 +112,7 @@ contract UtilsTest is DSTest {
         _tiles[5].characterIndex = 21;
         _tiles[6].fontClass = 5;
         _tiles[6].characterIndex = 23;
-        vm.writeFile(
-            string.concat("utils/data/sample_tray2.svg"),
-            Utils.generateSVG(_tiles, true)
-        );
+        vm.writeFile(string.concat("utils/data/sample_tray2.svg"), Utils.generateSVG(_tiles, true));
     }
 
     function testSampleName() public {
@@ -133,9 +127,6 @@ contract UtilsTest is DSTest {
         _tiles[3].characterIndex = 19;
         _tiles[4].fontClass = 9;
         _tiles[4].characterIndex = 14;
-        vm.writeFile(
-            string.concat("utils/data/sample_name.svg"),
-            Utils.generateSVG(_tiles, false)
-        );
+        vm.writeFile(string.concat("utils/data/sample_name.svg"), Utils.generateSVG(_tiles, false));
     }
 }
