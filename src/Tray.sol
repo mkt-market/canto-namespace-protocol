@@ -226,7 +226,7 @@ contract Tray is ERC721A, Owned {
         uint256 numPrelaunchMinted = prelaunchMinted;
         if (numPrelaunchMinted != type(uint256).max) {
             // We do not allow any transfers of the prelaunch trays after the phase has ended
-            if (startTokenId <= numPrelaunchMinted && to != address(0))
+            if (startTokenId <= numPrelaunchMinted && to != address(0)) // TODO: Still allows fusing
                 revert PrelaunchTrayCannotBeUsedAfterPrelaunch(startTokenId);
         }
     }

@@ -79,4 +79,63 @@ contract UtilsTest is DSTest {
             }
         }
     }
+
+    function testSampleTiles() public {
+        Tray.TileData[] memory _tiles = new Tray.TileData[](7);
+        _tiles[0].fontClass = 0;
+        _tiles[0].characterIndex = 20;
+        _tiles[1].fontClass = 1;
+        _tiles[2].fontClass = 1;
+        _tiles[2].characterIndex = 29;
+        _tiles[3].fontClass = 2;
+        _tiles[3].characterIndex = 7;
+        _tiles[4].fontClass = 3;
+        _tiles[4].characterIndex = 16;
+        _tiles[5].fontClass = 4;
+        _tiles[5].characterIndex = 9;
+        _tiles[6].fontClass = 5;
+        _tiles[6].characterIndex = 17;
+        vm.writeFile(
+            string.concat("utils/data/sample_tray1.svg"),
+            Utils.generateSVG(_tiles, true)
+        );
+        _tiles[0].fontClass = 6;
+        _tiles[0].characterIndex = 20;
+        _tiles[1].fontClass = 7;
+        _tiles[1].characterIndex = 6;
+        _tiles[1].characterModifier = 244;
+        _tiles[2].characterIndex = 14;
+        _tiles[2].fontClass = 8;
+        _tiles[2].characterIndex = 25;
+        _tiles[3].fontClass = 9;
+        _tiles[3].characterIndex = 19;
+        _tiles[4].fontClass = 0;
+        _tiles[4].characterIndex = 83;
+        _tiles[5].fontClass = 4;
+        _tiles[5].characterIndex = 21;
+        _tiles[6].fontClass = 5;
+        _tiles[6].characterIndex = 23;
+        vm.writeFile(
+            string.concat("utils/data/sample_tray2.svg"),
+            Utils.generateSVG(_tiles, true)
+        );
+    }
+
+    function testSampleName() public {
+        Tray.TileData[] memory _tiles = new Tray.TileData[](5);
+        _tiles[0].fontClass = 1;
+        _tiles[0].characterIndex = 2;
+        _tiles[1].fontClass = 2;
+        _tiles[1].characterIndex = 0;
+        _tiles[2].fontClass = 3;
+        _tiles[2].characterIndex = 13;
+        _tiles[3].fontClass = 4;
+        _tiles[3].characterIndex = 19;
+        _tiles[4].fontClass = 9;
+        _tiles[4].characterIndex = 14;
+        vm.writeFile(
+            string.concat("utils/data/sample_name.svg"),
+            Utils.generateSVG(_tiles, false)
+        );
+    }
 }
