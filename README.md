@@ -26,6 +26,7 @@ A tile is one character in a specific font. Different fonts have different proba
 | 7              | <br>Zalgo**<br><br>           | 2          | a̷̢̝̫̭̐͒̇̅̉̌b̸̡̡̲̪̙͇̆͋̂̄̿̈́̄̈́̓c̶̫̱̐́̐̀͘d̷̳̟̮̼͙̫̬̫͎͎̎̾ẽ̸̋͜͝f̴̭͕̬̪͉̝̈́͘g̴̢͔̤͍̤̫̥̠̥̺̒ĥ̴̢̨̩͈͕̦̰͓̺͒͐͛į̴͖͙̳̻̓͊͊̚͠ͅj̶͙͖͉̪̍̿̈͝k̷̰͉͍͊̐͊͑̂̾̐͒̃͝ļ̸̥̬͉̳͖̋̾m̶̨̧̳͖̫̫̗͒̀̈́̿͝ͅǹ̸̛͙̲̺͒̏̑ȏ̵̺̘̬̭̘͑̌̏̄̑̂͐͠͝p̷̡̬͇̞̔͑̋̌̾̿q̶̡̼̙̲̳̰͈̊͗̂̈̄͊̒ͅř̷̛̰s̶̳̲̼͊̋̈́̑̌̒͌͝͝t̵̆̾̌͌͘ͅu̷̥̫̹̔͜v̶̻̤̥́̅́͠w̷̢͕̩̤̬̮̙̪͈̲̐͂͊͒͋̐̚͠͝x̶̝̠̺̻̱͋͒̊͝y̵̢̥̟̭̯̫̲͐̃̈́͘ͅz̴͙̖͌͋̋͒̿̾̇̎͘͝|
 | 8              | Blocks          | 2          | 🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉 |
 | 9              | Blocks Inverted | 1          | 🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉 |
+
 *For emojis that support skin tone modifiers, these can be specified when fusing. For instance, 👍 becomes 👍🏿 when the skin tone modifier 5 is passed. The following skin tone modifiers are supported:
 | **Value** | **Modifier**        |
 |-----------|---------------------|
@@ -35,6 +36,7 @@ A tile is one character in a specific font. Different fonts have different proba
 | 3         | 🏽                   |
 | 4         | 🏾                   |
 | 5         | 🏿                   |
+
 
 **Note that the Zalgo distortions are individually generated for every tile. The number of characters is therefore much higher, as every character can appear with different distortions.
 
