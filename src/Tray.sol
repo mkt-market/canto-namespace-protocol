@@ -118,6 +118,12 @@ contract Tray is ERC721A, Owned {
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (ownerOf(_id) == address(0)) revert TrayNotMinted(_id);
+        uint256 numPrelaunchMinted = prelaunchMinted;
+        if (numPrelaunchMinted != type(uint256).max) {
+            // Prelaunch trays become invalid after the phase has ended
+            if (_id <= numPrelaunchMinted)
+                revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_id);
+        }
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
         TileData[] memory nftTiles = new TileData[](TILES_PER_TRAY);
