@@ -121,8 +121,7 @@ contract Tray is ERC721A, Owned {
         uint256 numPrelaunchMinted = prelaunchMinted;
         if (numPrelaunchMinted != type(uint256).max) {
             // Prelaunch trays become invalid after the phase has ended
-            if (_id <= numPrelaunchMinted)
-                revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_id);
+            if (_id <= numPrelaunchMinted) revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_id);
         }
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
@@ -179,6 +178,12 @@ contract Tray is ERC721A, Owned {
             getApproved(_id) != msg.sender &&
             !isApprovedForAll(trayOwner, msg.sender)
         ) revert CallerNotAllowedToBurn();
+        if (msg.sender == namespaceNFT) {
+            // Disallow fusing for prelaunch trays after phase has ended
+            uint256 numPrelaunchMinted = prelaunchMinted;
+            if (numPrelaunchMinted != type(uint256).max && _id <= numPrelaunchMinted)
+                revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_id);
+        }
         delete tiles[_id];
         _burn(_id);
     }

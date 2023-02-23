@@ -264,7 +264,11 @@ library Utils {
     /// @dev Only works with (some) 4 byte UTF-8 sequences, not intended as a general UTF-8 handling function
     /// @param _startingSequence UTF-8 encoding of the first character (i.e. lowercase "a")
     /// @param _characterIndex Character to encode, between 0 (a) and 25 (z)
-    function _getUtfSequence(bytes memory _startingSequence, uint8 _characterIndex) private pure returns (bytes memory) {
+    function _getUtfSequence(bytes memory _startingSequence, uint8 _characterIndex)
+        private
+        pure
+        returns (bytes memory)
+    {
         uint8 lastByteVal = uint8(_startingSequence[3]);
         uint8 lastByteSum = lastByteVal + _characterIndex;
         if (lastByteSum < 192) {
