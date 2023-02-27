@@ -1,12 +1,12 @@
 {
-  "name": "canto-namespaces-protocol",
+  "name": "canto-namespace-protocol",
   "author": "mkt.market",
   "version": "1.0.0",
-  "description": "Canto Namespaces Protocol",
-  "homepage": "https://github.com/mkt-market/canto-namespaces-protocol#readme",
+  "description": "Canto Namespace Protocol",
+  "homepage": "https://github.com/mkt-market/canto-namespace-protocol#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mkt-market/canto-namespaces-protocol.git"
+    "url": "git+https://github.com/mkt-market/canto-namespace-protocol.git"
   },
   "scripts": {
     "prettier": "prettier --write 'src/**/*.sol'",

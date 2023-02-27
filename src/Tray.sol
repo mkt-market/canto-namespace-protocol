@@ -101,7 +101,7 @@ contract Tray is ERC721A, Owned {
         address _revenueAddress,
         address _note,
         address _namespaceNFT
-    ) ERC721A("Namespaces Tray", "NSTRAY") Owned(msg.sender) {
+    ) ERC721A("Namespace Tray", "NSTRAY") Owned(msg.sender) {
         lastHash = _initHash;
         trayPrice = _trayPrice;
         revenueAddress = _revenueAddress;

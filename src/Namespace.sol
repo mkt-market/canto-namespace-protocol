@@ -73,7 +73,7 @@ contract Namespace is ERC721, Owned {
         address _tray,
         address _note,
         address _revenueAddress
-    ) ERC721("Namespaces", "NS") Owned(msg.sender) {
+    ) ERC721("Namespace", "NS") Owned(msg.sender) {
         tray = Tray(_tray);
         note = ERC20(_note);
         revenueAddress = _revenueAddress;

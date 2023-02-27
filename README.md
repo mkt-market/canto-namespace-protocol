@@ -1,6 +1,6 @@
-# Canto Namespaces Protocol
+# Canto Namespace Protocol
 
-Canto Namespaces Protocol is a subprotocol for the Canto Identity Protocol that enables users to mint names with tiles that are contained in trays. Trays can be minted for a fee or traded on the secondary market.
+Canto Namespace Protocol is a subprotocol for the Canto Identity Protocol that enables users to mint names with tiles that are contained in trays. Trays can be minted for a fee or traded on the secondary market.
 
 ## Tray
 A tray is represented as an ERC721 token (NFT). Each tray contains 7 tiles (see below). A user calls `buy` and passes in an `amount` to buy the specified amount of trays. Each tray has a fixed price. The 7 tiles per tray are then generated according to a deterministic algorithm. A user can therefore precompute which trays he will get.
