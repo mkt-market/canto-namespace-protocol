@@ -64,6 +64,7 @@ contract Namespace is ERC721, Owned {
     error FusingDuplicateCharactersNotAllowed();
     error NameAlreadyRegistered(uint256 nftID);
     error TokenNotMinted(uint256 tokenID);
+    error CannotFuseCharacterWithSkinTone();
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
@@ -131,6 +132,11 @@ contract Namespace is ERC721, Owned {
             }
             Tray.TileData memory tileData = tray.getTile(trayID, tileOffset); // Will revert if tileOffset is too high
             uint8 characterModifier = tileData.characterModifier;
+
+            if (tileData.fontClass != 0 && _characterList[i].skinToneModifier != 0) {
+                revert CannotFuseCharacterWithSkinTone();
+            }
+
             if (tileData.fontClass == 0) {
                 // Emoji
                 characterModifier = _characterList[i].skinToneModifier;
