@@ -141,7 +141,11 @@ contract Namespace is ERC721, Owned {
                 // Emoji
                 characterModifier = _characterList[i].skinToneModifier;
             }
-            bytes memory charAsBytes = Utils.characterToUnicodeBytes(0, tileData.characterIndex, characterModifier);
+            bytes memory charAsBytes = Utils.characterToUnicodeBytes(
+                tileData.fontClass,
+                tileData.characterIndex,
+                characterModifier
+            );
             tileData.characterModifier = characterModifier;
             uint256 numBytesChar = charAsBytes.length;
             for (uint256 j; j < numBytesChar; ++j) {
