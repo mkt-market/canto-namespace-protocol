@@ -30,7 +30,7 @@ contract Tray is ERC721A, Owned {
     /// @notice Number of characters for letters and numbers
     uint256 private constant NUM_CHARS_LETTERS_NUMBERS = 36;
 
-    /// @notice Number of characters for letters and numbers
+    /// @notice Maximum number of trays that can be minted pre-launch (by the owner)
     uint256 private constant PRE_LAUNCH_MINT_CAP = 1_000;
 
     /// @notice Price of one tray in $NOTE
@@ -117,7 +117,7 @@ contract Tray is ERC721A, Owned {
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        if (ownerOf(_id) == address(0)) revert TrayNotMinted(_id);
+        if (!_exists(_id)) revert TrayNotMinted(_id);
         uint256 numPrelaunchMinted = prelaunchMinted;
         if (numPrelaunchMinted != type(uint256).max) {
             // Prelaunch trays become invalid after the phase has ended
@@ -152,7 +152,7 @@ contract Tray is ERC721A, Owned {
         if (prelaunchMinted == type(uint256).max) {
             // Still in prelaunch phase
             if (msg.sender != owner) revert OnlyOwnerCanMintPreLaunch();
-            if (startingTrayId + _amount > PRE_LAUNCH_MINT_CAP) revert MintExceedsPreLaunchAmount();
+            if (startingTrayId + _amount - 1 > PRE_LAUNCH_MINT_CAP) revert MintExceedsPreLaunchAmount();
         } else {
             SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
         }
@@ -193,7 +193,7 @@ contract Tray is ERC721A, Owned {
     /// @param _trayId Tray to query
     /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
     function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
-        if (ownerOf(_trayId) == address(0)) revert TrayNotMinted(_trayId);
+        if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId][_tileOffset];
     }
 
@@ -201,7 +201,7 @@ contract Tray is ERC721A, Owned {
     /// @dev Reverts for non-existing tray ID
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
-        if (ownerOf(_trayId) == address(0)) revert TrayNotMinted(_trayId);
+        if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId];
     }
 
