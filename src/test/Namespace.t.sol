@@ -605,41 +605,6 @@ contract NamespaceTest is DSTest {
         ns.fuse(list);
     }
 
-    function testSelectTrayIdToFuseSupportSkinTone() public {
-        for (uint256 i = 0; i < 100; i++) {
-            vm.startPrank(owner);
-            uint256 tid = tray.nextTokenId();
-            tray.buy(1);
-            vm.stopPrank();
-
-            uint8 tileOffset = 0;
-            uint8 skinToneModifier = 4;
-
-            Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
-
-            list[0] = Namespace.CharacterData(tid, tileOffset, skinToneModifier);
-            vm.startPrank(owner);
-
-            Tray.TileData memory tileData = tray.getTile(tid, tileOffset);
-
-            // selected tray id 4 with tileOffset 0
-            // 💃🏾 is used to fuse NFT, the emoji 💃🏾 does support skin modifier
-            if (tileData.fontClass == 0) {
-                try ns.fuse(list) {
-                    console.log("tray id (need to plus because i starts at 0)");
-                    console.log(i);
-                    console.log("fuse with an emoji with skin tone modifier works");
-                    string memory tokenURIData = ns.tokenURI(1);
-                    console.logString(tokenURIData);
-                    break;
-                } catch (bytes memory reason) {
-                    console.logBytes(reason);
-                }
-            }
-            vm.stopPrank();
-        }
-    }
-
     function testFuseWithEmojiSupportToneModifier() public {
         vm.startPrank(owner);
 
