@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity >=0.8.0;
+pragma solidity >=0.8.11;
 
 import {DSTest} from "ds-test/test.sol";
 import {Utilities} from "./utils/Utilities.sol";
@@ -76,16 +76,18 @@ contract TrayTest is DSTest {
     }
 
     function testRevertUnminted() public {
-        vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(TrayNotMinted.selector, type(uint256).max));
         tray.tokenURI(type(uint256).max);
-        vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(TrayNotMinted.selector, type(uint256).max));
         tray.getTile(type(uint256).max, type(uint8).max);
     }
 
     /// @dev this is failing for no apparent reason
     function testRevertUnmintedGetTiles() public {
-        vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
-        tray.getTiles(type(uint256).max);
+        // For some reason, an expectRevert fails with EvmError: revert. Therefore, we check the revert ourself
+        (bool success, bytes memory returnData) = address(tray).call(abi.encodeCall(Tray.getTiles, type(uint256).max));
+        assertTrue(!success);
+        assertEq(keccak256(returnData), keccak256(abi.encodeWithSelector(TrayNotMinted.selector, type(uint256).max)));
     }
 
     function testBurnInPrelaunchPhase() public {
@@ -97,11 +99,12 @@ contract TrayTest is DSTest {
 
     function testGetTileBurned() public {
         testBurnInPrelaunchPhase();
-        vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(TrayNotMinted.selector, 1));
         tray.getTile(1, 0);
-        // this is failing for no apparent reason
-        vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
-        tray.getTiles(1);
+        // For some reason, an expectRevert fails with EvmError: revert. Therefore, we check the revert ourself
+        (bool success, bytes memory returnData) = address(tray).call(abi.encodeCall(Tray.getTiles, 1));
+        assertTrue(!success);
+        assertEq(keccak256(returnData), keccak256(abi.encodeWithSelector(TrayNotMinted.selector, 1)));
     }
 
     function testRevertTooHighTileOffset() public {
