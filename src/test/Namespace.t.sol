@@ -179,7 +179,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, "b");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -204,7 +204,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, "b");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
 
@@ -239,7 +239,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, "b");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -263,7 +263,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, "b");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         vm.stopPrank();
@@ -301,7 +301,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, "9");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -331,7 +331,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, list.length);
+        assertEq(name, unicode"b😮😪");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -363,7 +363,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, "b");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -411,7 +411,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, unicode"💯𝓸b🍾𝒽");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -514,7 +514,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, unicode"b9😪𝓇8😮𝔢");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -536,7 +536,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, unicode"b9😪𝓇8😮𝔢");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         vm.stopPrank();
@@ -636,7 +636,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertGt(bytes(name).length, 0);
+        assertEq(name, unicode"💃🏾");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
