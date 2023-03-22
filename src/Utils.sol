@@ -255,7 +255,7 @@ library Utils {
     /// @return iteratedState New number
     function iteratePRNG(uint256 _currState) internal pure returns (uint256 iteratedState) {
         unchecked {
-            iteratedState = _currState * 15485863;
+            iteratedState = _currState * 15485863 + 2147483647;
             iteratedState = (iteratedState * iteratedState * iteratedState) % 2038074743;
         }
     }

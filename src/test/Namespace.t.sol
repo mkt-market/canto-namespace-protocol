@@ -179,7 +179,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, "b");
+        assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -204,7 +204,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, "b");
+        assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
 
@@ -239,7 +239,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, "b");
+        assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -263,7 +263,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, "b");
+        assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         vm.stopPrank();
@@ -301,7 +301,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, "9");
+        assertEq(name, "y");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -331,7 +331,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"b😮😪");
+        assertEq(name, unicode"m🐟💎");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -363,7 +363,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, "b");
+        assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -411,7 +411,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"💯𝓸b🍾𝒽");
+        assertEq(name, unicode"😌𝓯p😜𝓉");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -514,7 +514,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"b9😪𝓇8😮𝔢");
+        assertEq(name, unicode"my💎𝓁q🐟𝔩");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -536,7 +536,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"b9😪𝓇8😮𝔢");
+        assertEq(name, unicode"my💎𝓁q🐟𝔩");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         vm.stopPrank();
@@ -568,7 +568,10 @@ contract NamespaceTest is DSTest {
         ns.fuse(list);
 
         string memory tokenURIData = ns.tokenURI(1);
-        console.logString(tokenURIData);
+        assertEq(
+            tokenURIData,
+            "data:application/json;base64,eyJuYW1lIjogIm0iLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpSUhCeVpYTmxjblpsUVhOd1pXTjBVbUYwYVc4OUluaE5hVzVaVFdsdUlHMWxaWFFpSUhacFpYZENiM2c5SWpBZ01DQTBNREFnTWpBd0lqNDhjM1I1YkdVK2RHVjRkQ0I3SUdadmJuUXRabUZ0YVd4NU9pQnpZVzV6TFhObGNtbG1PeUJtYjI1MExYTnBlbVU2SURNd2NIZzdJSDA4TDNOMGVXeGxQangwWlhoMElHUnZiV2x1WVc1MExXSmhjMlZzYVc1bFBTSnRhV1JrYkdVaUlIUmxlSFF0WVc1amFHOXlQU0p0YVdSa2JHVWlJSGs5SWpFd01DSWdlRDBpTWpBd0lqNXRQQzkwWlhoMFBqd3ZjM1puUGc9PSJ9"
+        );
     }
 
     function testFuseCharacterWithSkinToneModifier() public {
@@ -599,8 +602,8 @@ contract NamespaceTest is DSTest {
 
         require(tileData.fontClass == 0, "fontClass should be 0, which is emoji font class");
 
-        // character 161 is 😪, expecting revert
-        vm.expectRevert(abi.encodeWithSelector(EmojiDoesNotSupportSkinToneModifier.selector, 161));
+        // character 156 is 😮, expecting revert
+        vm.expectRevert(abi.encodeWithSelector(EmojiDoesNotSupportSkinToneModifier.selector, 156));
 
         ns.fuse(list);
     }
@@ -608,18 +611,14 @@ contract NamespaceTest is DSTest {
     function testFuseWithEmojiSupportToneModifier() public {
         vm.startPrank(owner);
 
-        tray.buy(1);
-        tray.buy(1);
-        tray.buy(1);
-        tray.buy(1);
-        tray.buy(1);
+        tray.buy(75);
 
-        uint256 tid = 4;
+        uint256 tid = 75;
 
         uint8 tileOffset = 0;
         uint8 skinToneModifier = 4;
 
-        // fuse with emoji 💃🏾, which support skin modifier
+        // fuse with emoji 🖕🏾, which support skin modifier
 
         Tray.TileData memory tileData = tray.getTile(tid, tileOffset);
 
@@ -636,7 +635,7 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"💃🏾");
+        assertEq(name, unicode"🖕🏾");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
