@@ -78,8 +78,8 @@ contract Namespace is ERC721, Owned {
         tray = Tray(_tray);
         note = ERC20(_note);
         revenueAddress = _revenueAddress;
-        if (block.chainid == 7700) {
-            // Register CSR on Canto mainnnet
+        if (block.chainid == 7700 || block.chainid == 7701) {
+            // Register CSR on Canto main- and testnet
             Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
             turnstile.register(tx.origin);
         }
