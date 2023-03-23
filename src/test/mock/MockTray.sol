@@ -8,9 +8,8 @@ contract MockTray is Tray {
         bytes32 _initHash,
         uint256 _trayPrice,
         address _revenueAddress,
-        address _note,
-        address _namespaceNFT
-    ) Tray(_initHash, _trayPrice, _revenueAddress, _note, _namespaceNFT) {}
+        address _note
+    ) Tray(_initHash, _trayPrice, _revenueAddress, _note) {}
 
     function nextTokenId() external view returns (uint256) {
         return _nextTokenId();

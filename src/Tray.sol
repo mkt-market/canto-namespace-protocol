@@ -47,7 +47,7 @@ contract Tray is ERC721A, Owned {
     ERC20 public note;
 
     /// @notice Reference to the Namespace NFT contract
-    address public immutable namespaceNFT;
+    address public namespaceNFT;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -88,25 +88,23 @@ contract Tray is ERC721A, Owned {
     error MintExceedsPreLaunchAmount();
     error PrelaunchTrayCannotBeUsedAfterPrelaunch(uint256 startTokenId);
     error PrelaunchAlreadyEnded();
+    error NamespaceNftAlreadySet();
 
     /// @notice Sets the initial hash, tray price, and the revenue address
     /// @param _initHash Hash to initialize the system with. Will determine the generation sequence of the trays
     /// @param _trayPrice Price of one tray in $NOTE
     /// @param _revenueAddress Adress to send the revenue to
     /// @param _note Address of the $NOTE token
-    /// @param _namespaceNFT Address of the Namespace NFT
     constructor(
         bytes32 _initHash,
         uint256 _trayPrice,
         address _revenueAddress,
-        address _note,
-        address _namespaceNFT
+        address _note
     ) ERC721A("Namespace Tray", "NSTRAY") Owned(msg.sender) {
         lastHash = _initHash;
         trayPrice = _trayPrice;
         revenueAddress = _revenueAddress;
         note = ERC20(_note);
-        namespaceNFT = _namespaceNFT;
         if (block.chainid == 7700 || block.chainid == 7701) {
             // Register CSR on Canto main- and testnet
             Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
@@ -226,6 +224,13 @@ contract Tray is ERC721A, Owned {
         if (prelaunchMinted != type(uint256).max) revert PrelaunchAlreadyEnded();
         prelaunchMinted = _nextTokenId() - 1;
         emit PrelaunchEnded();
+    }
+
+    /// @notice Set the namespace address after deployment (because of cyclic dependencies)
+    /// @param _namespaceNft Address of the namespace NFT
+    function setNamespaceNft(address _namespaceNft) external onlyOwner {
+        if (namespaceNFT != address(0)) revert NamespaceNftAlreadySet();
+        namespaceNFT = _namespaceNft;
     }
 
     function _beforeTokenTransfers(

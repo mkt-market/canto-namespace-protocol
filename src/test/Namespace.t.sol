@@ -45,18 +45,15 @@ contract NamespaceTest is DSTest {
 
         note = new MockToken();
         price = 100e18;
-        address predicatedTrayAddr = 0x974B69642e9c55f93380380AA45DFA2c811F163E;
 
-        vm.prank(owner);
-        ns = new Namespace(predicatedTrayAddr, address(note), revenue);
-
-        vm.prank(owner);
-        tray = new MockTray(INIT_HASH, price, revenue, address(note), address(ns));
-        assertEq(address(tray), predicatedTrayAddr);
+        vm.startPrank(owner);
+        tray = new MockTray(INIT_HASH, price, revenue, address(note));
+        ns = new Namespace(address(tray), address(note), revenue);
+        tray.setNamespaceNft(address(ns));
 
         note.mint(owner, 10000e18);
-        vm.prank(owner);
         note.approve(address(ns), type(uint256).max);
+        vm.stopPrank();
     }
 
     function testFusingWith0Characters() public {

@@ -23,6 +23,7 @@ contract TrayTest is DSTest {
     error PrelaunchTrayCannotBeUsedAfterPrelaunch(uint256 startTokenId);
     error PrelaunchAlreadyEnded();
     error OwnerQueryForNonexistentToken();
+    error NamespaceNftAlreadySet();
     uint256 private constant TILES_PER_TRAY = 7;
 
     address payable[] internal users;
@@ -49,7 +50,7 @@ contract TrayTest is DSTest {
         note = new MockToken();
         price = 100e18;
         vm.prank(owner);
-        tray = new MockTray(INIT_HASH, price, revenue, address(note), address(mn));
+        tray = new MockTray(INIT_HASH, price, revenue, address(note));
 
         note.mint(owner, 10000e18);
         vm.prank(owner);
@@ -118,6 +119,28 @@ contract TrayTest is DSTest {
         vm.startPrank(user1);
         vm.expectRevert("UNAUTHORIZED");
         tray.changeRevenueAddress(user1);
+        vm.stopPrank();
+    }
+
+    function testRevertNonOwnerSetNamespaceNft() public {
+        vm.startPrank(user1);
+        vm.expectRevert("UNAUTHORIZED");
+        tray.setNamespaceNft(user1);
+        vm.stopPrank();
+    }
+
+    function testSetNamespace() public {
+        vm.startPrank(owner);
+        tray.setNamespaceNft(user1);
+        assertEq(tray.namespaceNFT(), user1);
+        vm.stopPrank();
+    }
+
+    function testRevertSetNamespaceNftMultipleTimes() public {
+        vm.startPrank(owner);
+        tray.setNamespaceNft(user1);
+        vm.expectRevert(abi.encodeWithSelector(NamespaceNftAlreadySet.selector));
+        tray.setNamespaceNft(user1);
         vm.stopPrank();
     }
 
