@@ -136,7 +136,7 @@ contract NamespaceTest is DSTest {
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(owner);
         ns.fuse(list);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
         ns.burn(id);
         vm.expectRevert(abi.encodeWithSelector(TokenNotMinted.selector, id));
         ns.tokenURI(id);
@@ -172,7 +172,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(user);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(user);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -197,7 +197,7 @@ contract NamespaceTest is DSTest {
         vm.startPrank(user);
         note.approve(address(ns), type(uint256).max);
         ns.fuse(list);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -232,7 +232,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(user);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(user);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -256,7 +256,7 @@ contract NamespaceTest is DSTest {
         vm.startPrank(user1);
         note.approve(address(ns), type(uint256).max);
         ns.fuse(list);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -294,7 +294,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(user);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(user);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -324,7 +324,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(user);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(user);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -356,7 +356,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(user);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(user);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -404,7 +404,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(user);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(user);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -464,7 +464,7 @@ contract NamespaceTest is DSTest {
         for (uint256 i; i < aliceMintIds.length; i++) {
             vm.prank(Alice);
             ns.fuse(buildCharacters(11 + i));
-            uint256 id = ns.nextNamespaceIDToMint();
+            uint256 id = ns.numTokensMinted();
             // check mint result
             assertEq(ns.ownerOf(id), Alice);
             aliceMintIds[i] = id;
@@ -473,7 +473,7 @@ contract NamespaceTest is DSTest {
         for (uint256 i; i < 3; i++) {
             vm.prank(Bob);
             ns.fuse(buildCharacters(21 + i));
-            uint256 id = ns.nextNamespaceIDToMint();
+            uint256 id = ns.numTokensMinted();
             // check mint result
             assertEq(ns.ownerOf(id), Bob);
         }
@@ -495,7 +495,7 @@ contract NamespaceTest is DSTest {
         // Charlie mints another namespace NFT
         vm.prank(Charlie);
         ns.fuse(buildCharacters(trayIds[0]));
-        uint256 newId = ns.nextNamespaceIDToMint();
+        uint256 newId = ns.numTokensMinted();
         assertEq(ns.ownerOf(newId), Charlie);
     }
 
@@ -507,7 +507,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(owner);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(owner);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -529,7 +529,7 @@ contract NamespaceTest is DSTest {
         vm.startPrank(user1);
         note.approve(address(ns), type(uint256).max);
         ns.fuse(buildCharacters(trayId));
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
@@ -628,7 +628,7 @@ contract NamespaceTest is DSTest {
         uint256 beforeBalance = note.balanceOf(owner);
         ns.fuse(list);
         uint256 afterBalance = note.balanceOf(owner);
-        uint256 id = ns.nextNamespaceIDToMint();
+        uint256 id = ns.numTokensMinted();
 
         // tokenToName
         string memory name = ns.tokenToName(id);
