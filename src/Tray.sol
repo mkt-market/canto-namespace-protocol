@@ -192,6 +192,11 @@ contract Tray is ERC721A, Owned {
     /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
     function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
         if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
+        uint256 numPrelaunchMinted = prelaunchMinted;
+        if (numPrelaunchMinted != type(uint256).max) {
+            // Prelaunch trays become invalid after the phase has ended
+            if (_trayId <= numPrelaunchMinted) revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_trayId);
+        }
         tileData = tiles[_trayId][_tileOffset];
     }
 
@@ -200,6 +205,11 @@ contract Tray is ERC721A, Owned {
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
         if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
+        uint256 numPrelaunchMinted = prelaunchMinted;
+        if (numPrelaunchMinted != type(uint256).max) {
+            // Prelaunch trays become invalid after the phase has ended
+            if (_trayId <= numPrelaunchMinted) revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_trayId);
+        }
         tileData = tiles[_trayId];
     }
 
