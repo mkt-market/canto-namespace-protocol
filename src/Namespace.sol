@@ -37,7 +37,7 @@ contract Namespace is ERC721, Owned {
     }
 
     /// @notice Next Namespace ID to mint. We start with minting at ID 1
-    uint256 public nextNamespaceIDToMint;
+    uint256 public numTokensMinted;
 
     /// @notice Maps names to NFT IDs
     mapping(string => uint256) public nameToToken;
@@ -112,7 +112,7 @@ contract Namespace is ERC721, Owned {
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
         uint256 fusingCosts = 2**(13 - numCharacters) * 1e18;
         SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, fusingCosts);
-        uint256 namespaceIDToMint = ++nextNamespaceIDToMint;
+        uint256 namespaceIDToMint = ++numTokensMinted;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
         bytes memory bName = new bytes(numCharacters * 33); // Used to convert into a string. Can be 33 times longer than the string at most (longest zalgo characters is 33 bytes)
         uint256 numBytes;
