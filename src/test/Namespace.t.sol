@@ -21,6 +21,7 @@ contract NamespaceTest is DSTest {
     error OwnerQueryForNonexistentToken();
     event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
     error EmojiDoesNotSupportSkinToneModifier(uint16 emojiIndex);
+    error CallerNotAllowedToFuse();
 
     address payable[] internal users;
     address revenue;
@@ -184,6 +185,21 @@ contract NamespaceTest is DSTest {
         tray.ownerOf(trayId);
         // check costs
         assertEq(afterBalance, beforeBalance - calcFusingCosts(1));
+
+        vm.stopPrank();
+    }
+
+    function testFusingAsUnauthorized() public {
+        address user = user1;
+        note.mint(user, 10000e18);
+        uint256 trayId = endPrelaunchAndBuyOne(user);
+        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
+        list[0] = Namespace.CharacterData(trayId, 0, 0);
+        vm.startPrank(user2);
+        note.approve(address(ns), type(uint256).max);
+        vm.expectRevert("TRANSFER_FROM_FAILED");
+        ns.fuse(list);
+        uint256 id = ns.numTokensMinted();
 
         vm.stopPrank();
     }
