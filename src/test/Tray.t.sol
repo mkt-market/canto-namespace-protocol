@@ -98,6 +98,14 @@ contract TrayTest is DSTest {
         vm.stopPrank();
     }
 
+    function testBurnByNonOwner() public {
+        testBuyInPrelaunchPhase();
+        vm.startPrank(user1);
+        vm.expectRevert(abi.encodeWithSelector(CallerNotAllowedToBurn.selector));
+        tray.burn(1);
+        vm.stopPrank();
+    }
+
     function testGetTileBurned() public {
         testBurnInPrelaunchPhase();
         vm.expectRevert(abi.encodeWithSelector(TrayNotMinted.selector, 1));
