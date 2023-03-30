@@ -22,6 +22,7 @@ contract NamespaceTest is DSTest {
     error EmojiDoesNotSupportSkinToneModifier(uint16 emojiIndex);
     error CallerNotAllowedToFuse();
     error PriceAdminRevoked();
+    error CannotFuseEmojisOnly();
 
     address payable[] internal users;
     address revenue;
@@ -188,11 +189,13 @@ contract NamespaceTest is DSTest {
         address user = user1;
         note.mint(user, 10000e18);
         uint256 trayId = buyOne(user);
-        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
+        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](3);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
+        list[1] = Namespace.CharacterData(trayId, 1, 0);
+        list[2] = Namespace.CharacterData(trayId, 2, 0);
         vm.startPrank(user2);
         note.approve(address(ns), type(uint256).max);
-        vm.expectRevert("TRANSFER_FROM_FAILED");
+        vm.expectRevert(abi.encodeWithSelector(CallerNotAllowedToFuse.selector));
         ns.fuse(list);
         uint256 id = ns.numTokensMinted();
 
@@ -339,14 +342,15 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"m🐟💎");
+        // m🐟💎
+        assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
         // check costs
-        assertEq(afterBalance, beforeBalance - calcFusingCosts(list.length));
+        assertEq(afterBalance, beforeBalance - calcFusingCosts(1));
 
         vm.stopPrank();
     }
@@ -419,7 +423,8 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"😌𝓯p😜𝓉");
+        // 😌𝓯p😜𝓉"
+        assertEq(name, "fpt");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -428,7 +433,7 @@ contract NamespaceTest is DSTest {
             tray.ownerOf(trayIds[i]);
         }
         // check costs
-        assertEq(afterBalance, beforeBalance - calcFusingCosts(list.length));
+        assertEq(afterBalance, beforeBalance - calcFusingCosts(3)); // Length without emojis
         vm.stopPrank();
     }
 
@@ -522,14 +527,15 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"my💎𝓁q🐟𝔩");
+        // my💎𝓁q🐟𝔩
+        assertEq(name, unicode"mylql");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
         // check costs
-        assertEq(afterBalance, beforeBalance - calcFusingCosts(list.length));
+        assertEq(afterBalance, beforeBalance - calcFusingCosts(5));
 
         vm.stopPrank();
     }
@@ -544,7 +550,8 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"my💎𝓁q🐟𝔩");
+        // my💎𝓁q🐟𝔩
+        assertEq(name, "mylql");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         vm.stopPrank();
@@ -598,12 +605,13 @@ contract NamespaceTest is DSTest {
 
     function testFuseEmojiDoesNotSupportSkinTone() public {
         uint256 trayId = buyOne();
-        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
+        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](2);
 
         uint8 tileOffset = 2;
         uint8 skinToneModifier = 4;
 
         list[0] = Namespace.CharacterData(trayId, tileOffset, skinToneModifier);
+        list[1] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(owner);
 
         Tray.TileData memory tileData = tray.getTile(trayId, tileOffset);
@@ -612,6 +620,25 @@ contract NamespaceTest is DSTest {
 
         // character 156 is 😮, expecting revert
         vm.expectRevert(abi.encodeWithSelector(EmojiDoesNotSupportSkinToneModifier.selector, 156));
+
+        ns.fuse(list);
+    }
+
+    function testFuseEmojiOnly() public {
+        uint256 trayId = buyOne();
+        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
+
+        uint8 tileOffset = 2;
+        uint8 skinToneModifier = 4;
+
+        list[0] = Namespace.CharacterData(trayId, tileOffset, 0);
+        vm.startPrank(owner);
+
+        Tray.TileData memory tileData = tray.getTile(trayId, tileOffset);
+
+        require(tileData.fontClass == 0, "fontClass should be 0, which is emoji font class");
+
+        vm.expectRevert(abi.encodeWithSelector(CannotFuseEmojisOnly.selector));
 
         ns.fuse(list);
     }
@@ -632,9 +659,10 @@ contract NamespaceTest is DSTest {
 
         require(tileData.fontClass == 0, "fontClass should be 0, which is emoji font class");
 
-        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
+        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](2);
 
         list[0] = Namespace.CharacterData(tid, tileOffset, skinToneModifier);
+        list[1] = Namespace.CharacterData(tid, 1, 0);
 
         uint256 beforeBalance = note.balanceOf(owner);
         ns.fuse(list);
@@ -643,7 +671,11 @@ contract NamespaceTest is DSTest {
 
         // tokenToName
         string memory name = ns.tokenToName(id);
-        assertEq(name, unicode"🖕🏾");
+        assertEq(
+            ns.tokenURI(id),
+            "data:application/json;base64,eyJuYW1lIjogInEiLCAiaW1hZ2UiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpSUhCeVpYTmxjblpsUVhOd1pXTjBVbUYwYVc4OUluaE5hVzVaVFdsdUlHMWxaWFFpSUhacFpYZENiM2c5SWpBZ01DQTBNREFnTWpBd0lqNDhjM1I1YkdVK2RHVjRkQ0I3SUdadmJuUXRabUZ0YVd4NU9pQnpZVzV6TFhObGNtbG1PeUJtYjI1MExYTnBlbVU2SURNd2NIZzdJSDA4TDNOMGVXeGxQangwWlhoMElHUnZiV2x1WVc1MExXSmhjMlZzYVc1bFBTSnRhV1JrYkdVaUlIUmxlSFF0WVc1amFHOXlQU0p0YVdSa2JHVWlJSGs5SWpFd01DSWdlRDBpTVRNeklqN3duNWFWOEorUHZqd3ZkR1Y0ZEQ0OGRHVjRkQ0JrYjIxcGJtRnVkQzFpWVhObGJHbHVaVDBpYldsa1pHeGxJaUIwWlhoMExXRnVZMmh2Y2owaWJXbGtaR3hsSWlCNVBTSXhNREFpSUhnOUlqSTJOaUkrOEoyVXJqd3ZkR1Y0ZEQ0OEwzTjJaejQ9In0="
+        );
+        assertEq(name, "q");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
