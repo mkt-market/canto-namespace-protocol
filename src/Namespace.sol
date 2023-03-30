@@ -49,7 +49,7 @@ contract Namespace is ERC721, Owned {
     mapping(uint256 => Tray.TileData[]) private nftCharacters;
 
     /// @notice Address that can change the prices. Can be revoked such that no more changes are possible
-    address priceAdmin;
+    address public priceAdmin;
 
     /// @notice Price for fusing a Namespace NFT with a given number of characters
     mapping(uint256 => uint256) public fusingCosts;
