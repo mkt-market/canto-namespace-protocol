@@ -15,7 +15,6 @@ contract NamespaceTest is DSTest {
     Utilities internal utils;
 
     error InvalidNumberOfCharacters(uint256 numCharacters);
-    error PrelaunchTrayCannotBeUsedAfterPrelaunch(uint256 startTokenId);
     error FusingDuplicateCharactersNotAllowed();
     error TokenNotMinted(uint256 tokenID);
     error OwnerQueryForNonexistentToken();
@@ -48,7 +47,8 @@ contract NamespaceTest is DSTest {
         price = 100e18;
 
         vm.startPrank(owner);
-        tray = new MockTray(INIT_HASH, price, revenue, address(note));
+        // Initial price set to 0
+        tray = new MockTray(INIT_HASH, 0, revenue, address(note));
         ns = new Namespace(address(tray), address(note), revenue);
         tray.setNamespaceNft(address(ns));
 
@@ -67,28 +67,16 @@ contract NamespaceTest is DSTest {
         ns.fuse(new Namespace.CharacterData[](14));
     }
 
-    function buyOnePrelaunch(bool endPrelaunch) internal returns (uint256) {
+    function buyOne() internal returns (uint256) {
         vm.startPrank(owner);
         uint256 tid = tray.nextTokenId();
         tray.buy(1);
-        if (endPrelaunch) {
-            tray.endPrelaunchPhase();
-        }
         vm.stopPrank();
         return tid;
     }
 
-    function testFusingWithPrelaunchTrayAfterPrelaunch() public {
-        uint256 tid = buyOnePrelaunch(true);
-        Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
-        list[0] = Namespace.CharacterData(tid, 0, 0);
-        vm.prank(owner);
-        vm.expectRevert(abi.encodeWithSelector(PrelaunchTrayCannotBeUsedAfterPrelaunch.selector, tid));
-        ns.fuse(list);
-    }
-
     function testFusingWithDuplicateTiles() public {
-        uint256 tid = buyOnePrelaunch(false);
+        uint256 tid = buyOne();
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](2);
         list[0] = Namespace.CharacterData(tid, 0, 0);
         list[1] = Namespace.CharacterData(tid, 0, 0);
@@ -132,7 +120,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testTokenURIOfBurnedToken() public {
-        uint256 trayId = buyOnePrelaunch(false);
+        uint256 trayId = buyOne();
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(owner);
@@ -144,9 +132,8 @@ contract NamespaceTest is DSTest {
         vm.stopPrank();
     }
 
-    function endPrelaunchAndBuyOne(address user) public returns (uint256) {
+    function buyOne(address user) public returns (uint256) {
         vm.prank(owner);
-        tray.endPrelaunchPhase();
 
         note.mint(user, price);
 
@@ -165,7 +152,7 @@ contract NamespaceTest is DSTest {
     function testFusingAsOwnerOfTray() public {
         address user = user1;
         note.mint(user, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user);
+        uint256 trayId = buyOne(user);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(user);
@@ -192,7 +179,7 @@ contract NamespaceTest is DSTest {
     function testFusingAsUnauthorized() public {
         address user = user1;
         note.mint(user, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user);
+        uint256 trayId = buyOne(user);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(user2);
@@ -207,7 +194,7 @@ contract NamespaceTest is DSTest {
     function testBurnAsOwner() public {
         address user = user1;
         note.mint(user, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user);
+        uint256 trayId = buyOne(user);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(user);
@@ -233,7 +220,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testFusingAsApprovedOfTray() public {
-        uint256 trayId = endPrelaunchAndBuyOne(user2);
+        uint256 trayId = buyOne(user2);
         vm.prank(user2);
 
         address user = user1;
@@ -266,7 +253,7 @@ contract NamespaceTest is DSTest {
 
     function testBurnAsApprovedForAllOfOwner() public {
         note.mint(user1, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user1);
+        uint256 trayId = buyOne(user1);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(user1);
@@ -302,7 +289,7 @@ contract NamespaceTest is DSTest {
     function testFusingWithOneTrayAndOneTile() public {
         address user = user1;
         note.mint(user, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user);
+        uint256 trayId = buyOne(user);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 1, 0);
         vm.startPrank(user);
@@ -329,7 +316,7 @@ contract NamespaceTest is DSTest {
     function testFusingWithOneTrayAndMultiTiles() public {
         address user = user1;
         note.mint(user, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user);
+        uint256 trayId = buyOne(user);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](3);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         list[1] = Namespace.CharacterData(trayId, 5, 0);
@@ -357,7 +344,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testFusingAsApprovedForAllOfTrayOwner() public {
-        uint256 trayId = endPrelaunchAndBuyOne(user2);
+        uint256 trayId = buyOne(user2);
         vm.prank(user2);
 
         address user = user1;
@@ -405,7 +392,7 @@ contract NamespaceTest is DSTest {
     function testFusingWithMuTrayAndMultiTiles() public {
         address user = user1;
         note.mint(user, 10000e18);
-        endPrelaunchAndBuyOne(user);
+        buyOne(user);
 
         uint256[] memory trayIds = buyTray(user, 3);
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](5);
@@ -496,7 +483,7 @@ contract NamespaceTest is DSTest {
 
         // end prelaunch
         vm.prank(owner);
-        tray.endPrelaunchPhase();
+        tray.changeTrayPrice(price);
 
         // == after prelaunch ==
         // Alice transfers 1 namespace to Charlie
@@ -516,7 +503,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testFusingDuringPrelaunch() public {
-        uint256 trayId = buyOnePrelaunch(false);
+        uint256 trayId = buyOne();
         vm.startPrank(owner);
 
         Namespace.CharacterData[] memory list = buildCharacters(trayId);
@@ -541,7 +528,7 @@ contract NamespaceTest is DSTest {
 
     function testBurnAsApproved() public {
         note.mint(user1, 10000e18);
-        uint256 trayId = endPrelaunchAndBuyOne(user1);
+        uint256 trayId = buyOne(user1);
         vm.startPrank(user1);
         note.approve(address(ns), type(uint256).max);
         ns.fuse(buildCharacters(trayId));
@@ -573,7 +560,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testTokenURIProperlyRendered() public {
-        uint256 trayId = buyOnePrelaunch(false);
+        uint256 trayId = buyOne();
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
         list[0] = Namespace.CharacterData(trayId, 0, 0);
         vm.startPrank(owner);
@@ -588,7 +575,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testFuseCharacterWithSkinToneModifier() public {
-        uint256 trayId = buyOnePrelaunch(false);
+        uint256 trayId = buyOne();
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
 
         uint8 tileOffset = 1;
@@ -602,7 +589,7 @@ contract NamespaceTest is DSTest {
     }
 
     function testFuseEmojiDoesNotSupportSkinTone() public {
-        uint256 trayId = buyOnePrelaunch(false);
+        uint256 trayId = buyOne();
         Namespace.CharacterData[] memory list = new Namespace.CharacterData[](1);
 
         uint8 tileOffset = 2;

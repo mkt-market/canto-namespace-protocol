@@ -33,8 +33,8 @@ contract Tray is ERC721A, Owned {
     /// @notice Maximum number of trays that can be minted pre-launch (by the owner)
     uint256 private constant PRE_LAUNCH_MINT_CAP = 1_000;
 
-    /// @notice Price of one tray in $NOTE
-    uint256 public immutable trayPrice;
+    /// @notice Price of one tray in $NOTE. Changeable by the owner
+    uint256 public trayPrice;
 
     /*//////////////////////////////////////////////////////////////
                                  ADDRESSES
@@ -69,26 +69,25 @@ contract Tray is ERC721A, Owned {
     /// @notice Last hash that was used to generate a tray
     bytes32 public lastHash;
 
-    /// @notice Set to the number of minted NFTs after the prelaunch has ended
-    uint256 private prelaunchMinted = type(uint256).max;
+    /// @notice Address that can change the prices. Can be revoked such that no more changes are possible
+    address priceAdmin;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
     event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
     event NoteAddressUpdate(address indexed oldNoteAddress, address indexed newNoteAddress);
-    event PrelaunchEnded();
+    event TrayPriceUpdated(uint256 oldTrayPrice, uint256 newTrayPrice);
+    event PriceAdminUpdated(address indexed oldPriceAdmin, address indexed newPriceAdmin);
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToBurn();
     error TrayNotMinted(uint256 tokenID);
-    error OnlyOwnerCanMintPreLaunch();
-    error MintExceedsPreLaunchAmount();
-    error PrelaunchTrayCannotBeUsedAfterPrelaunch(uint256 startTokenId);
-    error PrelaunchAlreadyEnded();
     error NamespaceNftAlreadySet();
+    error CallerNotAllowedToChangeTrayPrice();
+    error PriceAdminRevoked();
 
     /// @notice Sets the initial hash, tray price, and the revenue address
     /// @param _initHash Hash to initialize the system with. Will determine the generation sequence of the trays
@@ -105,6 +104,7 @@ contract Tray is ERC721A, Owned {
         trayPrice = _trayPrice;
         revenueAddress = _revenueAddress;
         note = ERC20(_note);
+        priceAdmin = msg.sender;
         if (block.chainid == 7700 || block.chainid == 7701) {
             // Register CSR on Canto main- and testnet
             Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
@@ -116,11 +116,6 @@ contract Tray is ERC721A, Owned {
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (!_exists(_id)) revert TrayNotMinted(_id);
-        uint256 numPrelaunchMinted = prelaunchMinted;
-        if (numPrelaunchMinted != type(uint256).max) {
-            // Prelaunch trays become invalid after the phase has ended
-            if (_id <= numPrelaunchMinted) revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_id);
-        }
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
         TileData[] memory nftTiles = new TileData[](TILES_PER_TRAY);
@@ -147,11 +142,7 @@ contract Tray is ERC721A, Owned {
     /// @param _amount Amount of trays to buy
     function buy(uint256 _amount) external {
         uint256 startingTrayId = _nextTokenId();
-        if (prelaunchMinted == type(uint256).max) {
-            // Still in prelaunch phase
-            if (msg.sender != owner) revert OnlyOwnerCanMintPreLaunch();
-            if (startingTrayId + _amount - 1 > PRE_LAUNCH_MINT_CAP) revert MintExceedsPreLaunchAmount();
-        } else {
+        if (trayPrice > 0) {
             SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
         }
         for (uint256 i; i < _amount; ++i) {
@@ -176,12 +167,6 @@ contract Tray is ERC721A, Owned {
             getApproved(_id) != msg.sender &&
             !isApprovedForAll(trayOwner, msg.sender)
         ) revert CallerNotAllowedToBurn();
-        if (msg.sender == namespaceNFT) {
-            // Disallow fusing for prelaunch trays after phase has ended
-            uint256 numPrelaunchMinted = prelaunchMinted;
-            if (numPrelaunchMinted != type(uint256).max && _id <= numPrelaunchMinted)
-                revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_id);
-        }
         delete tiles[_id];
         _burn(_id);
     }
@@ -192,11 +177,6 @@ contract Tray is ERC721A, Owned {
     /// @param _tileOffset Offset of the tile within the query, needs to be between 0 .. TILES_PER_TRAY - 1
     function getTile(uint256 _trayId, uint8 _tileOffset) external view returns (TileData memory tileData) {
         if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
-        uint256 numPrelaunchMinted = prelaunchMinted;
-        if (numPrelaunchMinted != type(uint256).max) {
-            // Prelaunch trays become invalid after the phase has ended
-            if (_trayId <= numPrelaunchMinted) revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_trayId);
-        }
         tileData = tiles[_trayId][_tileOffset];
     }
 
@@ -205,11 +185,6 @@ contract Tray is ERC721A, Owned {
     /// @param _trayId Tray to query
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
         if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
-        uint256 numPrelaunchMinted = prelaunchMinted;
-        if (numPrelaunchMinted != type(uint256).max) {
-            // Prelaunch trays become invalid after the phase has ended
-            if (_trayId <= numPrelaunchMinted) revert PrelaunchTrayCannotBeUsedAfterPrelaunch(_trayId);
-        }
         tileData = tiles[_trayId];
     }
 
@@ -229,11 +204,22 @@ contract Tray is ERC721A, Owned {
         emit RevenueAddressUpdated(currentRevenueAddress, _newRevenueAddress);
     }
 
-    /// @notice End the prelaunch phase and start the public mint
-    function endPrelaunchPhase() external onlyOwner {
-        if (prelaunchMinted != type(uint256).max) revert PrelaunchAlreadyEnded();
-        prelaunchMinted = _nextTokenId() - 1;
-        emit PrelaunchEnded();
+    /// @notice Change the tray price. Only callable by the price admin
+    /// @param _newTrayPrice New tray price to use
+    function changeTrayPrice(uint256 _newTrayPrice) external {
+        if (msg.sender != priceAdmin) revert CallerNotAllowedToChangeTrayPrice();
+        uint256 currentTrayPrice = trayPrice;
+        trayPrice = _newTrayPrice;
+        emit TrayPriceUpdated(currentTrayPrice, _newTrayPrice);
+    }
+
+    /// @notice Change the price admin
+    /// @param _newPriceAdmin New price admin to use. If set to address(0), the price admin is revoked forever
+    function changePriceAdmin(address _newPriceAdmin) external onlyOwner {
+        address currentPriceAdmin = priceAdmin;
+        if (currentPriceAdmin == address(0)) revert PriceAdminRevoked();
+        priceAdmin = _newPriceAdmin;
+        emit PriceAdminUpdated(currentPriceAdmin, _newPriceAdmin);
     }
 
     /// @notice Set the namespace address after deployment (because of cyclic dependencies)
@@ -241,20 +227,6 @@ contract Tray is ERC721A, Owned {
     function setNamespaceNft(address _namespaceNft) external onlyOwner {
         if (namespaceNFT != address(0)) revert NamespaceNftAlreadySet();
         namespaceNFT = _namespaceNft;
-    }
-
-    function _beforeTokenTransfers(
-        address, /* from*/
-        address to,
-        uint256 startTokenId,
-        uint256 /* quantity*/
-    ) internal view override {
-        uint256 numPrelaunchMinted = prelaunchMinted;
-        if (numPrelaunchMinted != type(uint256).max) {
-            // We do not allow any transfers of the prelaunch trays after the phase has ended
-            if (startTokenId <= numPrelaunchMinted && to != address(0))
-                revert PrelaunchTrayCannotBeUsedAfterPrelaunch(startTokenId);
-        }
     }
 
     function _drawing(uint256 _seed) private pure returns (TileData memory tileData) {
