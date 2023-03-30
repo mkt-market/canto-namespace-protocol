@@ -21,6 +21,7 @@ contract NamespaceTest is DSTest {
     event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
     error EmojiDoesNotSupportSkinToneModifier(uint16 emojiIndex);
     error CallerNotAllowedToFuse();
+    error PriceAdminRevoked();
 
     address payable[] internal users;
     address revenue;
@@ -34,6 +35,7 @@ contract NamespaceTest is DSTest {
     uint256 price;
     MockToken note;
     Namespace ns;
+    uint256 manualPrice;
 
     function setUp() public {
         utils = new Utilities();
@@ -50,6 +52,9 @@ contract NamespaceTest is DSTest {
         // Initial price set to 0
         tray = new MockTray(INIT_HASH, 0, revenue, address(note));
         ns = new Namespace(address(tray), address(note), revenue);
+        for (uint256 i = 1; i <= 13; i++) {
+            ns.changeFusingCost(i, calcFusingCosts(i));
+        }
         tray.setNamespaceNft(address(ns));
 
         note.mint(owner, 10000e18);
@@ -145,7 +150,10 @@ contract NamespaceTest is DSTest {
         return tid;
     }
 
-    function calcFusingCosts(uint256 numCharacters) internal pure returns (uint256) {
+    function calcFusingCosts(uint256 numCharacters) internal view returns (uint256) {
+        if (manualPrice > 0) {
+            return manualPrice;
+        }
         return 2**(13 - numCharacters) * 1e18;
     }
 
@@ -643,5 +651,34 @@ contract NamespaceTest is DSTest {
         tray.ownerOf(tid);
         // check costs
         assertEq(afterBalance, beforeBalance - calcFusingCosts(1));
+    }
+
+    function testChangePriceAdminByOwner() public {
+        vm.prank(owner);
+        ns.changePriceAdmin(user1);
+        vm.prank(user1);
+        ns.changeFusingCost(1, 1e18);
+    }
+
+    function testChangePriceAdminAfterRevocation() public {
+        vm.prank(owner);
+        ns.changePriceAdmin(address(0));
+        vm.prank(owner);
+        vm.expectRevert(abi.encodeWithSelector(PriceAdminRevoked.selector));
+        ns.changePriceAdmin(user1);
+    }
+
+    function testRevertNonOwnerSetPriceAdmin() public {
+        vm.startPrank(user1);
+        vm.expectRevert("UNAUTHORIZED");
+        ns.changePriceAdmin(user1);
+        vm.stopPrank();
+    }
+
+    function testChangePriceByPriceAdmin() public {
+        vm.prank(owner);
+        ns.changeFusingCost(1, 1e18);
+        manualPrice = 1e18;
+        testFusingAsOwnerOfTray();
     }
 }

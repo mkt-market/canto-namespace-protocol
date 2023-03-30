@@ -48,12 +48,20 @@ contract Namespace is ERC721, Owned {
     /// @notice Stores the character data of an NFT
     mapping(uint256 => Tray.TileData[]) private nftCharacters;
 
+    /// @notice Address that can change the prices. Can be revoked such that no more changes are possible
+    address public priceAdmin;
+
+    /// @notice Price for fusing a Namespace NFT with a given number of characters
+    mapping(uint256 => uint256) public fusingCosts;
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
     event NamespaceFused(address indexed fuser, uint256 indexed namespaceId, string indexed name);
     event RevenueAddressUpdated(address indexed oldRevenueAddress, address indexed newRevenueAddress);
-    event NoteAddressUpdate(address indexed oldNoteAddress, address indexed newNoteAddress);
+    event NoteAddressUpdated(address indexed oldNoteAddress, address indexed newNoteAddress);
+    event PriceAdminUpdated(address indexed oldPriceAdmin, address indexed newPriceAdmin);
+    event FusingCostUpdated(uint256 indexed numCharacters, uint256 oldFusingCost, uint256 newFusingCost);
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
@@ -65,6 +73,8 @@ contract Namespace is ERC721, Owned {
     error NameAlreadyRegistered(uint256 nftID);
     error TokenNotMinted(uint256 tokenID);
     error CannotFuseCharacterWithSkinTone();
+    error CallerNotAllowedToChangeFusingCost();
+    error PriceAdminRevoked();
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
@@ -78,6 +88,7 @@ contract Namespace is ERC721, Owned {
         tray = Tray(_tray);
         note = ERC20(_note);
         revenueAddress = _revenueAddress;
+        priceAdmin = msg.sender;
         if (block.chainid == 7700 || block.chainid == 7701) {
             // Register CSR on Canto main- and testnet
             Turnstile turnstile = Turnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44);
@@ -110,8 +121,8 @@ contract Namespace is ERC721, Owned {
     function fuse(CharacterData[] calldata _characterList) external {
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
-        uint256 fusingCosts = 2**(13 - numCharacters) * 1e18;
-        SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, fusingCosts);
+        uint256 costsToFuse = fusingCosts[numCharacters];
+        SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, costsToFuse);
         uint256 namespaceIDToMint = ++numTokensMinted;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
         bytes memory bName = new bytes(numCharacters * 33); // Used to convert into a string. Can be 33 times longer than the string at most (longest zalgo characters is 33 bytes)
@@ -200,7 +211,7 @@ contract Namespace is ERC721, Owned {
     function changeNoteAddress(address _newNoteAddress) external onlyOwner {
         address currentNoteAddress = address(note);
         note = ERC20(_newNoteAddress);
-        emit NoteAddressUpdate(currentNoteAddress, _newNoteAddress);
+        emit NoteAddressUpdated(currentNoteAddress, _newNoteAddress);
     }
 
     /// @notice Change the revenue address
@@ -209,5 +220,24 @@ contract Namespace is ERC721, Owned {
         address currentRevenueAddress = revenueAddress;
         revenueAddress = _newRevenueAddress;
         emit RevenueAddressUpdated(currentRevenueAddress, _newRevenueAddress);
+    }
+
+    /// @notice Change the fusing cost for a given number of characters. Only callable by the price admin
+    /// @param _numCharacters Number of characters to change the fusing cost for
+    /// @param _newFusingCost New fusing cost to use
+    function changeFusingCost(uint256 _numCharacters, uint256 _newFusingCost) external {
+        if (msg.sender != priceAdmin) revert CallerNotAllowedToChangeFusingCost();
+        uint256 currentFusingCost = fusingCosts[_numCharacters];
+        fusingCosts[_numCharacters] = _newFusingCost;
+        emit FusingCostUpdated(_numCharacters, currentFusingCost, _newFusingCost);
+    }
+
+    /// @notice Change the price admin
+    /// @param _newPriceAdmin New price admin to use. If set to address(0), the price admin is revoked forever
+    function changePriceAdmin(address _newPriceAdmin) external onlyOwner {
+        address currentPriceAdmin = priceAdmin;
+        if (currentPriceAdmin == address(0)) revert PriceAdminRevoked();
+        priceAdmin = _newPriceAdmin;
+        emit PriceAdminUpdated(currentPriceAdmin, _newPriceAdmin);
     }
 }

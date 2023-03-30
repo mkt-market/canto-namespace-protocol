@@ -70,7 +70,7 @@ contract Tray is ERC721A, Owned {
     bytes32 public lastHash;
 
     /// @notice Address that can change the prices. Can be revoked such that no more changes are possible
-    address priceAdmin;
+    address public priceAdmin;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
