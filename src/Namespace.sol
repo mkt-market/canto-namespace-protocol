@@ -75,6 +75,7 @@ contract Namespace is ERC721, Owned {
     error CannotFuseCharacterWithSkinTone();
     error CallerNotAllowedToChangeFusingCost();
     error PriceAdminRevoked();
+    error CannotFuseEmojisOnly();
 
     /// @notice Sets the reference to the tray
     /// @param _tray Address of the tray contract
@@ -121,11 +122,9 @@ contract Namespace is ERC721, Owned {
     function fuse(CharacterData[] calldata _characterList) external {
         uint256 numCharacters = _characterList.length;
         if (numCharacters > 13 || numCharacters == 0) revert InvalidNumberOfCharacters(numCharacters);
-        uint256 costsToFuse = fusingCosts[numCharacters];
-        SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, costsToFuse);
         uint256 namespaceIDToMint = ++numTokensMinted;
         Tray.TileData[] storage nftToMintCharacters = nftCharacters[namespaceIDToMint];
-        bytes memory bName = new bytes(numCharacters * 33); // Used to convert into a string. Can be 33 times longer than the string at most (longest zalgo characters is 33 bytes)
+        bytes memory bName = new bytes(numCharacters); // Used to convert into a string in base font without emojis. Could be shorter, but numCharacters at most
         uint256 numBytes;
         // Extract unique trays for burning them later on
         uint256 numUniqueTrays;
@@ -147,22 +146,20 @@ contract Namespace is ERC721, Owned {
             if (tileData.fontClass != 0 && _characterList[i].skinToneModifier != 0) {
                 revert CannotFuseCharacterWithSkinTone();
             }
-
             if (tileData.fontClass == 0) {
                 // Emoji
                 characterModifier = _characterList[i].skinToneModifier;
+                bytes memory charAsBytes = Utils.characterToUnicodeBytes(
+                    0, // We still do the conversion for emojis to validate skin tone modifiers
+                    tileData.characterIndex,
+                    characterModifier
+                );
+            } else {
+                // We skip emojis and do not add them to the reserved name
+                bytes memory charAsBytes = Utils.characterToUnicodeBytes(1, tileData.characterIndex, 0);
+                bName[numBytes++] = charAsBytes[0];
             }
-            bytes memory charAsBytes = Utils.characterToUnicodeBytes(
-                tileData.fontClass,
-                tileData.characterIndex,
-                characterModifier
-            );
             tileData.characterModifier = characterModifier;
-            uint256 numBytesChar = charAsBytes.length;
-            for (uint256 j; j < numBytesChar; ++j) {
-                bName[numBytes + j] = charAsBytes[j];
-            }
-            numBytes += numBytesChar;
             nftToMintCharacters.push(tileData);
             // We keep track of the unique trays NFTs (for burning them) and only check the owner once for the last occurence of the tray
             if (isLastTrayEntry) {
@@ -176,6 +173,7 @@ contract Namespace is ERC721, Owned {
                 ) revert CallerNotAllowedToFuse();
             }
         }
+        if (numBytes == 0) revert CannotFuseEmojisOnly();
         // Set array to the real length (in bytes) to avoid zero bytes in the end when doing the string conversion
         assembly {
             mstore(bName, numBytes)
@@ -189,6 +187,8 @@ contract Namespace is ERC721, Owned {
         for (uint256 i; i < numUniqueTrays; ++i) {
             tray.burn(uniqueTrays[i]);
         }
+        uint256 costsToFuse = fusingCosts[numBytes]; // Costs are calculated based on the number of characters without emojis
+        SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, costsToFuse);
         _mint(msg.sender, namespaceIDToMint);
         // Although _mint already emits an event, we additionally emit one because of the name
         emit NamespaceFused(msg.sender, namespaceIDToMint, nameToRegister);
