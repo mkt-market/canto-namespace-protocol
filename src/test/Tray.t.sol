@@ -24,6 +24,8 @@ contract TrayTest is DSTest {
     error PrelaunchAlreadyEnded();
     error OwnerQueryForNonexistentToken();
     error NamespaceNftAlreadySet();
+    error PriceAdminRevoked();
+    error CallerNotAllowedToChangeTrayPrice();
     uint256 private constant TILES_PER_TRAY = 7;
 
     address payable[] internal users;
@@ -50,22 +52,16 @@ contract TrayTest is DSTest {
         note = new MockToken();
         price = 100e18;
         vm.prank(owner);
-        tray = new MockTray(INIT_HASH, price, revenue, address(note));
+        // Initial price is set to 0
+        tray = new MockTray(INIT_HASH, 0, revenue, address(note));
 
         note.mint(owner, 10000e18);
         vm.prank(owner);
         note.approve(address(tray), type(uint256).max);
     }
 
-    function testBuyInPrelaunchPhase() public {
-        // Only owner can buy in prelaunch phase
+    function ownerBuysOne() public {
         vm.startPrank(owner);
-        tray.buy(1);
-        vm.stopPrank();
-
-        // Others can not buy in prelaunch phase
-        vm.startPrank(user1);
-        vm.expectRevert(abi.encodeWithSelector(OnlyOwnerCanMintPreLaunch.selector));
         tray.buy(1);
         vm.stopPrank();
     }
@@ -92,14 +88,14 @@ contract TrayTest is DSTest {
     }
 
     function testBurnInPrelaunchPhase() public {
-        testBuyInPrelaunchPhase();
+        ownerBuysOne();
         vm.startPrank(owner);
         tray.burn(1);
         vm.stopPrank();
     }
 
     function testBurnByNonOwner() public {
-        testBuyInPrelaunchPhase();
+        ownerBuysOne();
         vm.startPrank(user1);
         vm.expectRevert(abi.encodeWithSelector(CallerNotAllowedToBurn.selector));
         tray.burn(1);
@@ -117,7 +113,7 @@ contract TrayTest is DSTest {
     }
 
     function testRevertTooHighTileOffset() public {
-        testBuyInPrelaunchPhase();
+        ownerBuysOne();
         // this revert with evm [Index out of bounds]
         vm.expectRevert();
         tray.getTile(1, 100);
@@ -127,6 +123,20 @@ contract TrayTest is DSTest {
         vm.startPrank(user1);
         vm.expectRevert("UNAUTHORIZED");
         tray.changeRevenueAddress(user1);
+        vm.stopPrank();
+    }
+
+    function testRevertNonOwnerSetPriceAdmin() public {
+        vm.startPrank(user1);
+        vm.expectRevert("UNAUTHORIZED");
+        tray.changePriceAdmin(user1);
+        vm.stopPrank();
+    }
+
+    function testRevertNonOwnerSetPrice() public {
+        vm.startPrank(user1);
+        vm.expectRevert(abi.encodeWithSelector(CallerNotAllowedToChangeTrayPrice.selector));
+        tray.changeTrayPrice(price);
         vm.stopPrank();
     }
 
@@ -152,16 +162,9 @@ contract TrayTest is DSTest {
         vm.stopPrank();
     }
 
-    function testOwnerBuyTooManyInPrelaunchPhase() public {
-        vm.startPrank(owner);
-        vm.expectRevert(abi.encodeWithSelector(MintExceedsPreLaunchAmount.selector));
-        tray.buy(1001);
-        vm.stopPrank();
-    }
-
     function testBuyingOneAfterPrelaunchPhase() public {
         vm.prank(owner);
-        tray.endPrelaunchPhase();
+        tray.changeTrayPrice(price);
 
         note.mint(user1, price);
         uint256 beforeBal = note.balanceOf(user1);
@@ -184,7 +187,7 @@ contract TrayTest is DSTest {
 
     function testBuyingMultipleOnesAfterPrelaunchPhase() public {
         vm.prank(owner);
-        tray.endPrelaunchPhase();
+        tray.changeTrayPrice(price);
 
         uint256 buyAmt = 5;
 
@@ -235,23 +238,27 @@ contract TrayTest is DSTest {
         assertTrue(data.fontClass + data.characterIndex + data.characterModifier > 0);
     }
 
-    function testEndPrelaunchPhaseByOwner() public {
-        vm.prank(owner);
-        tray.endPrelaunchPhase();
-    }
-
-    function testEndPrelaunchPhaseByNonOwner() public {
-        vm.prank(user1);
-        vm.expectRevert("UNAUTHORIZED");
-        tray.endPrelaunchPhase();
-    }
-
     function testChangeRevenueAddressByOwner() public {
         vm.prank(owner);
         tray.changeRevenueAddress(user1);
     }
 
-    function testTransferDuringPrelaunch() public {
+    function testChangePriceAdminByOwner() public {
+        vm.prank(owner);
+        tray.changePriceAdmin(user1);
+        vm.prank(user1);
+        tray.changeTrayPrice(price * 2);
+    }
+
+    function testChangePriceAdminAfterRevocation() public {
+        vm.prank(owner);
+        tray.changePriceAdmin(address(0));
+        vm.prank(owner);
+        vm.expectRevert(abi.encodeWithSelector(PriceAdminRevoked.selector));
+        tray.changePriceAdmin(user1);
+    }
+
+    function testTransfer() public {
         vm.startPrank(owner);
         uint256 tid = tray.nextTokenId();
         tray.buy(1);
@@ -259,17 +266,7 @@ contract TrayTest is DSTest {
         vm.stopPrank();
     }
 
-    function testTransferAfterPrelaunch() public {
-        vm.startPrank(owner);
-        uint256 tid = tray.nextTokenId();
-        tray.buy(1);
-        tray.endPrelaunchPhase();
-        vm.expectRevert(abi.encodeWithSelector(PrelaunchTrayCannotBeUsedAfterPrelaunch.selector, tid));
-        tray.transferFrom(owner, user1, tid);
-        vm.stopPrank();
-    }
-
-    function testTokenURIForPrelaunchTrayDuringPrelaunch() public {
+    function testTokenURI() public {
         vm.startPrank(owner);
         uint256 tid = tray.nextTokenId();
         tray.buy(1);
@@ -278,23 +275,8 @@ contract TrayTest is DSTest {
         vm.stopPrank();
     }
 
-    function testBurnPrelaunchTray() public {
-        vm.startPrank(owner);
-        uint256 tid = tray.nextTokenId();
-        tray.buy(1);
-        tray.endPrelaunchPhase();
-        tray.burn(tid);
-        // check tid is burned
-        vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
-        tray.ownerOf(tid);
-        // the following will revert obviously. comment for expectRevert problem
-        // tray.getTiles(tid);
-        vm.stopPrank();
-    }
-
-    function endPrelaunchAndBuyOne(address user) public returns (uint256) {
+    function buyOne(address user) public returns (uint256) {
         vm.prank(owner);
-        tray.endPrelaunchPhase();
 
         note.mint(user, price);
 
@@ -306,8 +288,8 @@ contract TrayTest is DSTest {
         return tid;
     }
 
-    function testBurnNonPrelaunchTrayByOwner() public {
-        uint256 tid = endPrelaunchAndBuyOne(user1);
+    function testBurnTrayByOwner() public {
+        uint256 tid = buyOne(user1);
 
         vm.startPrank(user1);
         tray.burn(tid);
@@ -319,8 +301,8 @@ contract TrayTest is DSTest {
         vm.stopPrank();
     }
 
-    function testBurnNonPrelaunchTrayByApproved() public {
-        uint256 tid = endPrelaunchAndBuyOne(user1);
+    function testBurnTrayByApproved() public {
+        uint256 tid = buyOne(user1);
 
         vm.prank(user1);
         tray.approve(user2, tid);
@@ -335,8 +317,8 @@ contract TrayTest is DSTest {
         // tray.getTiles(tid);
     }
 
-    function testBurnNonPrelaunchTrayByApprovedForAll() public {
-        uint256 tid = endPrelaunchAndBuyOne(user1);
+    function testBurnTrayByApprovedForAll() public {
+        uint256 tid = buyOne(user1);
 
         vm.prank(user1);
         tray.setApprovalForAll(user2, true);
@@ -365,7 +347,7 @@ contract TrayTest is DSTest {
     }
 
     function testTransferNormalTray() public {
-        uint256 tid = endPrelaunchAndBuyOne(user1);
+        uint256 tid = buyOne(user1);
         assertEq(tray.ownerOf(tid), user1);
         // transfer to user2
         vm.prank(user1);
@@ -373,8 +355,8 @@ contract TrayTest is DSTest {
         assertEq(tray.ownerOf(tid), user2);
     }
 
-    function testTokenURIForNonPrelaunchTray() public {
-        uint256 tid = endPrelaunchAndBuyOne(user1);
+    function testTokenURIFor() public {
+        uint256 tid = buyOne(user1);
         bytes memory svg = abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 400 200">',
             "<style>text { font-family: sans-serif; font-size: 30px; }</style>",

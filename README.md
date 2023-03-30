@@ -10,8 +10,6 @@ An image for every tray is dynamically generated. Two example trays are shown he
 
 ![Example Tray 2](./docs/sample_tray2.svg)
 
-There is a prelaunch phase where trays can be minted for distribution to the community. However, these trays can only be used (transferred or fused) during the prelaunch phase and become useless afterwards. 
-
 ## Tile
 A tile is one character in a specific font. Different fonts have different probabilities to appear in a tile. The fonts are:
 | **Font Class** | **Name**        | **Shares** | **Characters** |
