@@ -47,6 +47,11 @@
   },
   {
     "inputs": [],
+    "name": "CallerNotAllowedToBuy",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CallerNotAllowedToChangeTrayPrice",
     "type": "error"
   },

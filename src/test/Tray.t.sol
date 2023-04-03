@@ -17,6 +17,7 @@ contract TrayTest is DSTest {
     Utilities internal utils;
 
     error CallerNotAllowedToBurn();
+    error CallerNotAllowedToBuy();
     error TrayNotMinted(uint256 tokenID);
     error OnlyOwnerCanMintPreLaunch();
     error MintExceedsPreLaunchAmount();
@@ -52,8 +53,8 @@ contract TrayTest is DSTest {
         note = new MockToken();
         price = 100e18;
         vm.prank(owner);
-        // Initial price is set to 0
-        tray = new MockTray(INIT_HASH, 0, revenue, address(note));
+        // Initial price is set to 20
+        tray = new MockTray(INIT_HASH, 20 * 1e18, revenue, address(note));
 
         note.mint(owner, 10000e18);
         vm.prank(owner);
@@ -66,10 +67,20 @@ contract TrayTest is DSTest {
         vm.stopPrank();
     }
 
-    function testOwnerBuyMaxInPrelaunchPhase() public {
-        vm.prank(owner);
+    function testOwnerBuyWithPriceZero() public {
+        vm.startPrank(owner);
+        tray.changeTrayPrice(0);
         tray.buy(1000);
         assertEq(tray.balanceOf(owner), 1000);
+        vm.stopPrank();
+    }
+
+    function testNonOwnerBuyWithPriceZero() public {
+        vm.prank(owner);
+        tray.changeTrayPrice(0);
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSelector(CallerNotAllowedToBuy.selector));
+        tray.buy(1);
     }
 
     function testRevertUnminted() public {

@@ -47,11 +47,11 @@ contract NamespaceTest is DSTest {
         owner = users[11];
 
         note = new MockToken();
-        price = 100e18;
+        price = 20e18;
 
         vm.startPrank(owner);
-        // Initial price set to 0
-        tray = new MockTray(INIT_HASH, 0, revenue, address(note));
+        // Initial price set to 20
+        tray = new MockTray(INIT_HASH, price, revenue, address(note));
         ns = new Namespace(address(tray), address(note), revenue);
         for (uint256 i = 1; i <= 13; i++) {
             ns.changeFusingCost(i, calcFusingCosts(i));
@@ -60,6 +60,7 @@ contract NamespaceTest is DSTest {
 
         note.mint(owner, 10000e18);
         note.approve(address(ns), type(uint256).max);
+        note.approve(address(tray), type(uint256).max);
         vm.stopPrank();
     }
 

@@ -84,6 +84,7 @@ contract Tray is ERC721A, Owned {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error CallerNotAllowedToBurn();
+    error CallerNotAllowedToBuy();
     error TrayNotMinted(uint256 tokenID);
     error NamespaceNftAlreadySet();
     error CallerNotAllowedToChangeTrayPrice();
@@ -142,7 +143,10 @@ contract Tray is ERC721A, Owned {
     /// @param _amount Amount of trays to buy
     function buy(uint256 _amount) external {
         uint256 startingTrayId = _nextTokenId();
-        if (trayPrice > 0) {
+        if (trayPrice == 0) {
+            // Only allow minting by owner if price is 0
+            if (msg.sender != owner) revert CallerNotAllowedToBuy();
+        } else {
             SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
         }
         for (uint256 i; i < _amount; ++i) {
