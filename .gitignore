@@ -2,6 +2,7 @@ out/
 cache/
 node_modules/
 utils/data/
+broadcast/
 .env
 .DS_Store
 .secret
