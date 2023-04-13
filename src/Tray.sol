@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {ERC721A} from "erc721a/ERC721A.sol";
+import {ERC721AQueryable, ERC721A, IERC721A} from "erc721a/extensions/ERC721AQueryable.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
@@ -10,7 +10,7 @@ import {Base64} from "solady/utils/Base64.sol";
 import "./Utils.sol";
 import "../interface/Turnstile.sol";
 
-contract Tray is ERC721A, Owned {
+contract Tray is ERC721AQueryable, Owned {
     /*//////////////////////////////////////////////////////////////
                                  CONSTANTS
     //////////////////////////////////////////////////////////////*/
@@ -115,7 +115,7 @@ contract Tray is ERC721A, Owned {
 
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
-    function tokenURI(uint256 _id) public view override returns (string memory) {
+    function tokenURI(uint256 _id) public view override(ERC721A, IERC721A) returns (string memory) {
         if (!_exists(_id)) revert TrayNotMinted(_id);
         // Need to do an explicit copy here, implicit one not supported
         TileData[TILES_PER_TRAY] storage storedNftTiles = tiles[_id];
