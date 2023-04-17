@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {ERC721} from "solmate/tokens/ERC721.sol";
+import {ERC721, ERC721Enumerable} from "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import "./Tray.sol";
 import "./Utils.sol";
 import "../interface/Turnstile.sol";
 
-contract Namespace is ERC721, Owned {
+contract Namespace is ERC721Enumerable, Owned {
     /*//////////////////////////////////////////////////////////////
                                  ADDRESSES
     //////////////////////////////////////////////////////////////*/
@@ -100,7 +100,7 @@ contract Namespace is ERC721, Owned {
     /// @notice Get the token URI for the specified _id
     /// @param _id ID to query for
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        if (_ownerOf[_id] == address(0)) revert TokenNotMinted(_id);
+        if (_ownerOf(_id) == address(0)) revert TokenNotMinted(_id);
         string memory json = Base64.encode(
             bytes(
                 string(
@@ -198,7 +198,7 @@ contract Namespace is ERC721, Owned {
     /// @param _id Namespace NFT ID
     function burn(uint256 _id) external {
         address nftOwner = ownerOf(_id);
-        if (nftOwner != msg.sender && getApproved[_id] != msg.sender && !isApprovedForAll[nftOwner][msg.sender])
+        if (nftOwner != msg.sender && getApproved(_id) != msg.sender && !isApprovedForAll(nftOwner, msg.sender))
             revert CallerNotAllowedToBurn();
         string memory associatedName = tokenToName[_id];
         delete tokenToName[_id];

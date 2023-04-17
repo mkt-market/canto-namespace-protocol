@@ -289,7 +289,7 @@ contract NamespaceTest is DSTest {
         ns.burn(id);
 
         // id is burned
-        vm.expectRevert("NOT_MINTED");
+        vm.expectRevert("ERC721: invalid token ID");
         ns.ownerOf(id);
         // tokenToName is cleared
         name = ns.tokenToName(id);
@@ -566,7 +566,7 @@ contract NamespaceTest is DSTest {
         ns.burn(id);
 
         // id is burned
-        vm.expectRevert("NOT_MINTED");
+        vm.expectRevert("ERC721: invalid token ID");
         ns.ownerOf(id);
         // tokenToName is cleared
         name = ns.tokenToName(id);
