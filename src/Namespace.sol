@@ -206,6 +206,22 @@ contract Namespace is ERC721Enumerable, Owned {
         _burn(_id);
     }
 
+    /// @notice Get the characters of a Namespace NFT in the image font
+    /// @param _id Namespace NFT ID
+    /// @return characters Array containing the characters of the Namespace NFT
+    function getNamespaceCharacters(uint256 _id) external view returns (string[] memory) {
+        if (_ownerOf(_id) == address(0)) revert TokenNotMinted(_id);
+        Tray.TileData[] memory namespaceTiles = nftCharacters[_id];
+        string[] memory characters = new string[](namespaceTiles.length);
+        for (uint256 i; i < namespaceTiles.length; ++i) {
+            Tray.TileData memory tileData = namespaceTiles[i];
+            characters[i] = string(
+                Utils.characterToUnicodeBytes(tileData.fontClass, tileData.characterIndex, tileData.characterModifier)
+            );
+        }
+        return characters;
+    }
+
     /// @notice Change the address of the $NOTE token
     /// @param _newNoteAddress New address to use
     function changeNoteAddress(address _newNoteAddress) external onlyOwner {

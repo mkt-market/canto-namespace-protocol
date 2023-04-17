@@ -177,6 +177,12 @@ contract NamespaceTest is DSTest {
         assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](1);
+        expectedChars[0] = "m";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
@@ -219,6 +225,12 @@ contract NamespaceTest is DSTest {
         assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](1);
+        expectedChars[0] = "m";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
 
         // burn as owner
         ns.burn(id);
@@ -228,6 +240,8 @@ contract NamespaceTest is DSTest {
         assertEq(bytes(name).length, 0);
         // nameToToken is cleared
         assertEq(ns.nameToToken(name), 0);
+        vm.expectRevert(abi.encodeWithSelector(TokenNotMinted.selector, id));
+        ns.getNamespaceCharacters(id);
         vm.stopPrank();
     }
 
@@ -254,6 +268,12 @@ contract NamespaceTest is DSTest {
         assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](1);
+        expectedChars[0] = "m";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
@@ -278,6 +298,12 @@ contract NamespaceTest is DSTest {
         assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](1);
+        expectedChars[0] = "m";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         vm.stopPrank();
 
         // setApprovalForAll
@@ -316,6 +342,12 @@ contract NamespaceTest is DSTest {
         assertEq(name, "y");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](1);
+        expectedChars[0] = "y";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
@@ -347,6 +379,14 @@ contract NamespaceTest is DSTest {
         assertEq(name, "m");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](3);
+        expectedChars[0] = "m";
+        expectedChars[1] = unicode"🐟";
+        expectedChars[2] = unicode"💎";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
@@ -377,6 +417,12 @@ contract NamespaceTest is DSTest {
         // tokenToName
         string memory name = ns.tokenToName(id);
         assertEq(name, "m");
+        string[] memory expectedChars = new string[](1);
+        expectedChars[0] = "m";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // nameToToken
         assertEq(ns.nameToToken(name), id);
         // trays should be burned
@@ -428,6 +474,16 @@ contract NamespaceTest is DSTest {
         assertEq(name, "fpt");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](5);
+        expectedChars[0] = unicode"😌";
+        expectedChars[1] = unicode"𝓯";
+        expectedChars[2] = unicode"p";
+        expectedChars[3] = unicode"😜";
+        expectedChars[4] = unicode"𝓉";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         for (uint256 i; i < trayIds.length; ++i) {
             vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
@@ -532,6 +588,18 @@ contract NamespaceTest is DSTest {
         assertEq(name, unicode"mylql");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](7);
+        expectedChars[0] = unicode"m";
+        expectedChars[1] = unicode"y";
+        expectedChars[2] = unicode"💎";
+        expectedChars[3] = unicode"𝓁";
+        expectedChars[4] = unicode"q";
+        expectedChars[5] = unicode"🐟";
+        expectedChars[6] = unicode"𝔩";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
@@ -555,6 +623,18 @@ contract NamespaceTest is DSTest {
         assertEq(name, "mylql");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](7);
+        expectedChars[0] = unicode"m";
+        expectedChars[1] = unicode"y";
+        expectedChars[2] = unicode"💎";
+        expectedChars[3] = unicode"𝓁";
+        expectedChars[4] = unicode"q";
+        expectedChars[5] = unicode"🐟";
+        expectedChars[6] = unicode"𝔩";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         vm.stopPrank();
 
         // approve user2
@@ -679,6 +759,13 @@ contract NamespaceTest is DSTest {
         assertEq(name, "q");
         // nameToToken
         assertEq(ns.nameToToken(name), id);
+        string[] memory expectedChars = new string[](2);
+        expectedChars[0] = unicode"🖕🏾";
+        expectedChars[1] = unicode"𝔮";
+        string[] memory returnedChars = ns.getNamespaceCharacters(id);
+        for (uint256 i = 0; i < expectedChars.length; i++) {
+            assertEq(returnedChars[i], expectedChars[i]);
+        }
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(tid);
