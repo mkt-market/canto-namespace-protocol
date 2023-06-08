@@ -183,8 +183,6 @@ contract NamespaceTest is DSTest {
         for (uint256 i = 0; i < expectedChars.length; i++) {
             assertEq(returnedChars[i], expectedChars[i]);
         }
-        string memory metadata = ns.metadata(id);
-        console.log(metadata);
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);
