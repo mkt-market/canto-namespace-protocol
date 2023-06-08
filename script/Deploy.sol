@@ -12,6 +12,8 @@ contract DeploymentScript is Script {
     address FEE_WALLET = address(0x169F9dFeBdA65952418BEf58cEe6e79fA3d07BdB); // TODO
     uint256 constant TRAY_PRICE = 1 * 1e18; // TODO
     uint256 constant INIT_HASH = 42;
+    string subprotocolName = ""; // TODO
+    address cidNFT = address(0); // TODO
 
     function setUp() public {}
 
@@ -36,7 +38,9 @@ contract DeploymentScript is Script {
     function _deployNamespace(address _tray) private returns (address) {
         Namespace ns = new Namespace(_tray,
             NOTE,
-            FEE_WALLET);
+            FEE_WALLET,
+            subprotocolName,
+            cidNFT);
         return address(ns);
     }
 }
