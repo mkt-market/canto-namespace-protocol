@@ -30,9 +30,6 @@ contract Tray is ERC721AQueryable, Owned {
     /// @notice Number of characters for letters and numbers
     uint256 private constant NUM_CHARS_LETTERS_NUMBERS = 36;
 
-    /// @notice Maximum number of trays that can be minted pre-launch (by the owner)
-    uint256 private constant PRE_LAUNCH_MINT_CAP = 1_000;
-
     /// @notice Price of one tray in $NOTE. Changeable by the owner
     uint256 public trayPrice;
 
@@ -190,6 +187,12 @@ contract Tray is ERC721AQueryable, Owned {
     function getTiles(uint256 _trayId) external view returns (TileData[TILES_PER_TRAY] memory tileData) {
         if (!_exists(_trayId)) revert TrayNotMinted(_trayId);
         tileData = tiles[_trayId];
+    }
+
+    /// @notice Number of total minted trays
+    /// @return The number of minted trays
+    function totalMinted() external view returns (uint256) {
+        return _totalMinted();
     }
 
     /// @notice Change the address of the $NOTE token
