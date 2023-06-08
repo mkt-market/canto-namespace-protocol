@@ -146,14 +146,16 @@ contract Tray is ERC721AQueryable, Owned {
         } else {
             SafeTransferLib.safeTransferFrom(note, msg.sender, revenueAddress, _amount * trayPrice);
         }
+        bytes32 currLastHash = lastHash; // Cache to avoid too many SSTOREs
         for (uint256 i; i < _amount; ++i) {
             TileData[TILES_PER_TRAY] memory trayTiledata;
             for (uint256 j; j < TILES_PER_TRAY; ++j) {
-                lastHash = keccak256(abi.encode(lastHash));
-                trayTiledata[j] = _drawing(uint256(lastHash));
+                currLastHash = keccak256(abi.encode(currLastHash));
+                trayTiledata[j] = _drawing(uint256(currLastHash));
             }
             tiles[startingTrayId + i] = trayTiledata;
         }
+        lastHash = currLastHash;
         _mint(msg.sender, _amount); // We do not use _safeMint on purpose here to disallow callbacks and save gas
     }
 

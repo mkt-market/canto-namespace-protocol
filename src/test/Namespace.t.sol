@@ -52,7 +52,7 @@ contract NamespaceTest is DSTest {
         vm.startPrank(owner);
         // Initial price set to 20
         tray = new MockTray(INIT_HASH, price, revenue, address(note));
-        ns = new Namespace(address(tray), address(note), revenue);
+        ns = new Namespace(address(tray), address(note), revenue, "", address(0));
         for (uint256 i = 1; i <= 13; i++) {
             ns.changeFusingCost(i, calcFusingCosts(i));
         }
@@ -183,6 +183,8 @@ contract NamespaceTest is DSTest {
         for (uint256 i = 0; i < expectedChars.length; i++) {
             assertEq(returnedChars[i], expectedChars[i]);
         }
+        string memory metadata = ns.metadata(id);
+        console.log(metadata);
         // trays should be burned
         vm.expectRevert(abi.encodeWithSelector(OwnerQueryForNonexistentToken.selector));
         tray.ownerOf(trayId);

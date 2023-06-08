@@ -2,11 +2,14 @@
 pragma solidity >=0.8.0;
 
 import {ERC721, ERC721Enumerable} from "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import "./Tray.sol";
 import "./Utils.sol";
 import "../interface/Turnstile.sol";
+import {ICidNFT, IAddressRegistry} from "../interface/ICidNFT.sol";
+import {ICidSubprotocol} from "../interface/ICidSubprotocol.sol";
 
 contract Namespace is ERC721Enumerable, Owned {
     /*//////////////////////////////////////////////////////////////
@@ -21,6 +24,9 @@ contract Namespace is ERC721Enumerable, Owned {
 
     /// @notice Wallet that receives the revenue
     address private revenueAddress;
+
+    /// @notice Reference to the CID NFT
+    ICidNFT private immutable cidNFT;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -54,6 +60,15 @@ contract Namespace is ERC721Enumerable, Owned {
     /// @notice Price for fusing a Namespace NFT with a given number of characters
     mapping(uint256 => uint256) public fusingCosts;
 
+    /// @notice Name with which the subprotocol is registered
+    string public subprotocolName;
+
+    /// @notice Url of the docs
+    string public docs;
+
+    /// @notice Urls of the library
+    string[] private libraries;
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -62,6 +77,8 @@ contract Namespace is ERC721Enumerable, Owned {
     event NoteAddressUpdated(address indexed oldNoteAddress, address indexed newNoteAddress);
     event PriceAdminUpdated(address indexed oldPriceAdmin, address indexed newPriceAdmin);
     event FusingCostUpdated(uint256 indexed numCharacters, uint256 oldFusingCost, uint256 newFusingCost);
+    event DocsChanged(string newDocs);
+    event LibChanged(string[] newLibs);
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
@@ -81,14 +98,20 @@ contract Namespace is ERC721Enumerable, Owned {
     /// @param _tray Address of the tray contract
     /// @param _note Address of the $NOTE token
     /// @param _revenueAddress Adress to send the revenue to
+    /// @param _subprotocolName Name with which the subprotocol is registered
+    /// @param _cidNFT Reference to the CID NFT
     constructor(
         address _tray,
         address _note,
-        address _revenueAddress
+        address _revenueAddress,
+        string memory _subprotocolName,
+        address _cidNFT
     ) ERC721("Namespace", "NS") Owned(msg.sender) {
         tray = Tray(_tray);
         note = ERC20(_note);
         revenueAddress = _revenueAddress;
+        subprotocolName = _subprotocolName;
+        cidNFT = ICidNFT(_cidNFT);
         priceAdmin = msg.sender;
         if (block.chainid == 7700 || block.chainid == 7701) {
             // Register CSR on Canto main- and testnet
@@ -209,7 +232,7 @@ contract Namespace is ERC721Enumerable, Owned {
     /// @notice Get the characters of a Namespace NFT in the image font
     /// @param _id Namespace NFT ID
     /// @return characters Array containing the characters of the Namespace NFT
-    function getNamespaceCharacters(uint256 _id) external view returns (string[] memory) {
+    function getNamespaceCharacters(uint256 _id) public view returns (string[] memory) {
         if (_ownerOf(_id) == address(0)) revert TokenNotMinted(_id);
         Tray.TileData[] memory namespaceTiles = nftCharacters[_id];
         string[] memory characters = new string[](namespaceTiles.length);
@@ -220,6 +243,57 @@ contract Namespace is ERC721Enumerable, Owned {
             );
         }
         return characters;
+    }
+
+    /// @notice Get the subprotocol metadata that is associated with a subprotocol NFT
+    /// @param _tokenID The NFT to query
+    /// @return Subprotocol metadata as JSON
+    function metadata(uint256 _tokenID) external view returns (string memory) {
+        if (_ownerOf(_tokenID) == address(0)) revert TokenNotMinted(_tokenID);
+        (uint256 cidNFTID, address cidNFTRegisteredAddress) = _getAssociatedCIDAndOwner(_tokenID);
+        string memory subprotocolData = string.concat('"baseName": "', tokenToName[_tokenID], '"', ', "name": "');
+        string[] memory fontCharacters = getNamespaceCharacters(_tokenID);
+        for (uint256 i; i < fontCharacters.length; ++i) {
+            subprotocolData = string.concat(subprotocolData, fontCharacters[i]);
+        }
+        subprotocolData = string.concat(subprotocolData, '"');
+        string memory json = string.concat(
+            "{",
+            '"subprotocolName": "',
+            subprotocolName,
+            '",',
+            '"associatedCidToken":',
+            Strings.toString(cidNFTID),
+            ",",
+            '"associatedCidAddress": "',
+            Strings.toHexString(uint160(cidNFTRegisteredAddress), 20),
+            '",',
+            '"subprotocolData": {',
+            subprotocolData,
+            "}",
+            "}"
+        );
+        return json;
+    }
+
+    /// @notice Return the libraries / SDKs of the subprotocol (if any)
+    /// @return Location of the subprotocol library
+    function lib() external view returns (string[] memory) {
+        return libraries;
+    }
+
+    /// @notice Change the docs url
+    /// @param _newDocs New docs url
+    function changeDocs(string memory _newDocs) external onlyOwner {
+        docs = _newDocs;
+        emit DocsChanged(_newDocs);
+    }
+
+    /// @notice Change the lib urls
+    /// @param _newLibs New lib urls
+    function changeLib(string[] memory _newLibs) external onlyOwner {
+        libraries = _newLibs;
+        emit LibChanged(_newLibs);
     }
 
     /// @notice Change the address of the $NOTE token
@@ -255,5 +329,18 @@ contract Namespace is ERC721Enumerable, Owned {
         if (currentPriceAdmin == address(0)) revert PriceAdminRevoked();
         priceAdmin = _newPriceAdmin;
         emit PriceAdminUpdated(currentPriceAdmin, _newPriceAdmin);
+    }
+
+    /// @notice Get the associated CID NFT ID and the address that has registered this CID (if any)
+    /// @param _subprotocolNFTID ID of the subprotocol NFT to query
+    /// @return cidNFTID The CID NFT ID, cidNFTRegisteredAddress The registered address
+    function _getAssociatedCIDAndOwner(uint256 _subprotocolNFTID)
+        internal
+        view
+        returns (uint256 cidNFTID, address cidNFTRegisteredAddress)
+    {
+        cidNFTID = cidNFT.getPrimaryCIDNFT(subprotocolName, _subprotocolNFTID);
+        IAddressRegistry addressRegistry = cidNFT.addressRegistry();
+        cidNFTRegisteredAddress = addressRegistry.getAddress(cidNFTID);
     }
 }
