@@ -331,6 +331,18 @@ contract Namespace is ERC721Enumerable, Owned {
         emit PriceAdminUpdated(currentPriceAdmin, _newPriceAdmin);
     }
 
+    /// @notice Change the subprotocol name that is used for the metadata function
+    /// @param _subprotocolName New subprotocol name
+    function setSubprotocolName(string _subprotocolName) external onlyOwner {
+        subprotocolName = _subprotocolName;
+    }
+
+    /// @notice Set the CID NFT address
+    /// @param _cidNft CID NFT address
+    function setCidAddress(address _cidNft) external onlyOwner {
+        cidNFT = ICidNft(_cidNft);
+    }
+
     /// @notice Get the associated CID NFT ID and the address that has registered this CID (if any)
     /// @param _subprotocolNFTID ID of the subprotocol NFT to query
     /// @return cidNFTID The CID NFT ID, cidNFTRegisteredAddress The registered address
