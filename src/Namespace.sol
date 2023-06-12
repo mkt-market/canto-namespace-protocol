@@ -26,7 +26,7 @@ contract Namespace is ERC721Enumerable, Owned {
     address private revenueAddress;
 
     /// @notice Reference to the CID NFT
-    ICidNFT private immutable cidNFT;
+    ICidNFT private cidNFT;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -333,7 +333,7 @@ contract Namespace is ERC721Enumerable, Owned {
 
     /// @notice Change the subprotocol name that is used for the metadata function
     /// @param _subprotocolName New subprotocol name
-    function setSubprotocolName(string _subprotocolName) external onlyOwner {
+    function setSubprotocolName(string memory _subprotocolName) external onlyOwner {
         subprotocolName = _subprotocolName;
     }
 
