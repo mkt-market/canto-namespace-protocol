@@ -340,7 +340,7 @@ contract Namespace is ERC721Enumerable, Owned {
     /// @notice Set the CID NFT address
     /// @param _cidNft CID NFT address
     function setCidAddress(address _cidNft) external onlyOwner {
-        cidNFT = ICidNft(_cidNft);
+        cidNFT = ICidNFT(_cidNft);
     }
 
     /// @notice Get the associated CID NFT ID and the address that has registered this CID (if any)
