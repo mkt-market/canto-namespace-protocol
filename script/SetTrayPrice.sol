@@ -6,7 +6,7 @@ import "../src/Namespace.sol";
 import "../src/Tray.sol";
 
 contract SetPrice is Script {
-    address constant TRAY = address(0xA8ac87126F8599D53cDcbfe2C08FAFeb88e637F3);
+    address constant TRAY = address(0x364ACFceAf895aA369170f2b2237695e342E15AA);
 
     function setUp() public {}
 
@@ -15,7 +15,7 @@ contract SetPrice is Script {
         uint256 privateKey = vm.deriveKey(seedPhrase, 0);
         vm.startBroadcast(privateKey);
         Tray tray = Tray(TRAY);
-        tray.changeTrayPrice(1e18);
+        tray.changeTrayPrice(2 * 1e18);
         vm.stopBroadcast();
     }
 }

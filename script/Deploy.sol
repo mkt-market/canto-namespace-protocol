@@ -7,13 +7,12 @@ import "../src/Tray.sol";
 
 contract DeploymentScript is Script {
     // https://docs.canto.io/evm-development/contract-addresses
-    // address constant NOTE = address(0x4e71A2E537B7f9D9413D3991D37958c0b5e1e503);
-    address constant NOTE = address(0x03F734Bd9847575fDbE9bEaDDf9C166F880B5E5f); // TODO
-    address FEE_WALLET = address(0x169F9dFeBdA65952418BEf58cEe6e79fA3d07BdB); // TODO
-    uint256 constant TRAY_PRICE = 1 * 1e18; // TODO
+    address constant NOTE = address(0x4e71A2E537B7f9D9413D3991D37958c0b5e1e503);
+    address FEE_WALLET = address(0x26Be9f7b0b3c3E241e8E19C1332d95127b515541);
+    uint256 constant TRAY_PRICE = 0 * 1e18;
     uint256 constant INIT_HASH = 42;
-    string subprotocolName = ""; // TODO
-    address cidNFT = address(0); // TODO
+    string subprotocolName = "namespace";
+    address cidNFT = address(0);
 
     function setUp() public {}
 
